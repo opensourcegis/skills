@@ -17,7 +17,7 @@ export default async function ContributePage() {
       <div className="mx-auto max-w-xl px-6 py-16">
         <h1 className="display text-4xl text-ink">Google sign-in required</h1>
         <p className="mt-4 text-ink-soft">
-          Set <code>AUTH_SECRET</code>, <code>AUTH_GOOGLE_ID</code>, and{" "}
+          Set <code>AUTH_GOOGLE_ID</code> and{" "}
           <code>AUTH_GOOGLE_SECRET</code> in Vercel environment variables to
           enable contribution.
         </p>

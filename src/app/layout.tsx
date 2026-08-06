@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree, Fraunces } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { SITE_URL } from "@/lib/config";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -16,6 +17,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "GeoSkills Atlas",
     template: "%s · GeoSkills Atlas",

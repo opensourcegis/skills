@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { isGoogleAuthConfigured, signIn } from "@/auth";
+import { SITE_URL } from "@/lib/config";
 
 type PageProps = {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
@@ -24,9 +25,6 @@ export default async function SignInPage({ searchParams }: PageProps) {
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-soft">
           <li>
-            <code>AUTH_SECRET</code>
-          </li>
-          <li>
             <code>AUTH_GOOGLE_ID</code>
           </li>
           <li>
@@ -34,8 +32,8 @@ export default async function SignInPage({ searchParams }: PageProps) {
           </li>
         </ul>
         <p className="mt-4 text-sm text-ink-soft">
-          Redirect URI:{" "}
-          <code>https://YOUR-DOMAIN/api/auth/callback/google</code>
+          Google redirect URI:{" "}
+          <code>{SITE_URL}/api/auth/callback/google</code>
         </p>
       </div>
     );

@@ -1,12 +1,9 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import { AUTH_SECRET } from "@/lib/config";
 
 export function isGoogleAuthConfigured() {
-  return Boolean(
-    process.env.AUTH_GOOGLE_ID &&
-      process.env.AUTH_GOOGLE_SECRET &&
-      process.env.AUTH_SECRET,
-  );
+  return Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 }
 
 const providers = [];
@@ -28,5 +25,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/sign-in",
   },
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: AUTH_SECRET,
 });

@@ -2,6 +2,8 @@
 
 Faculty app for geospatial skillsets and custom course information sheets.
 
+**Production domain:** https://geospatialskills.in
+
 ## Features
 
 - Browse skillsets (cards/list + filters)
@@ -9,12 +11,36 @@ Faculty app for geospatial skillsets and custom course information sheets.
 - Add competencies, theory / demo / exercise sessions, and assessment methods
 - **Courses** tab: combine skillsets → course information sheet
 
-## Setup
+## Add domain on Vercel
 
-1. Create a Google OAuth Web client  
-   Redirect: `https://YOUR-DOMAIN/api/auth/callback/google`
-2. Set Vercel env vars: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`
-3. Redeploy. Turn off **Deployment Protection → Vercel Authentication** so visitors are not asked for a Vercel account.
+1. Vercel project → **Settings → Domains** → add:
+   - `geospatialskills.in`
+   - `www.geospatialskills.in` (optional, redirect to apex)
+2. At your DNS provider for `geospatialskills.in`, set:
+
+| Type | Name | Value |
+|------|------|--------|
+| **A** | `@` | `76.76.21.21` |
+| **CNAME** | `www` | `cname.vercel-dns.com` |
+
+3. Wait for DNS + SSL (Vercel issues the certificate automatically).
+4. Turn off **Deployment Protection → Vercel Authentication** so the public domain is not gated by a Vercel login.
+
+## Google sign-in
+
+1. [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) → OAuth client (Web)
+2. Authorized JavaScript origins:
+   - `https://geospatialskills.in`
+   - `http://localhost:3000` (local)
+3. Authorized redirect URIs:
+   - `https://geospatialskills.in/api/auth/callback/google`
+   - `http://localhost:3000/api/auth/callback/google`
+4. Set only these Vercel env vars (Production + Preview):
+   - `AUTH_GOOGLE_ID`
+   - `AUTH_GOOGLE_SECRET`
+   - Optional: `AUTH_URL=https://geospatialskills.in`
+
+Session signing uses a built-in app secret in code — you do **not** need a personal `AUTH_SECRET`.
 
 ```bash
 npm install

@@ -24,7 +24,7 @@ function mapError(error: unknown): string {
       return "Please sign in with Google to contribute.";
     }
     if (error.message === "AUTH_NOT_CONFIGURED") {
-      return "Google sign-in is not configured yet (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / AUTH_SECRET).";
+      return "Google sign-in is not configured yet (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET).";
     }
   }
   return "Unable to save. Check the form and try again.";
