@@ -8,14 +8,13 @@ export const EDGE_CONFIG_TOKEN =
 export const EDGE_CONFIG_URL = `https://edge-config.vercel.com/${EDGE_CONFIG_ID}?token=${EDGE_CONFIG_TOKEN}`;
 export const EDGE_CONFIG_DB_KEY = "geoskills_db";
 
-/** Production site domain (apex redirects to www on Vercel) */
+/** Canonical production URL (apex redirects to www) */
 export const SITE_DOMAIN = "www.geospatialskills.in";
 export const SITE_URL = `https://${SITE_DOMAIN}`;
 
 /**
- * Auth.js session encryption secret (app-level, not a personal password).
- * Any Google account can still sign in — this only signs cookies.
+ * Auth.js session encryption secret (app-level cookie signing).
+ * Not a personal password — any Google account can sign in.
+ * Kept in code so a missing/empty Vercel AUTH_SECRET cannot break login.
  */
-export const AUTH_SECRET =
-  process.env.AUTH_SECRET ||
-  "DUAMxRnZspU2wmwr5WhpImQXAMiAZVH0KB0sM5SEFkY=";
+export const AUTH_SECRET = "DUAMxRnZspU2wmwr5WhpImQXAMiAZVH0KB0sM5SEFkY=";

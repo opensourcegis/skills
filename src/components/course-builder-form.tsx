@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useMemo, useState } from "react";
-import { createCourse } from "@/lib/actions";
+import { createCourse, updateCourse } from "@/lib/actions";
 
 type SkillsetOption = {
   id: string;
@@ -12,17 +12,34 @@ type SkillsetOption = {
   topicName: string;
 };
 
+type CourseBuilderFormProps = {
+  skillsets: SkillsetOption[];
+  mode?: "create" | "edit";
+  initial?: {
+    id: string;
+    title: string;
+    code: string;
+    summary: string;
+    targetAudience: string;
+    skillsetIds: string[];
+  };
+};
+
 export function CourseBuilderForm({
   skillsets,
-}: {
-  skillsets: SkillsetOption[];
-}) {
+  mode = "create",
+  initial,
+}: CourseBuilderFormProps) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [code, setCode] = useState("");
-  const [summary, setSummary] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
-  const [skillsetIds, setSkillsetIds] = useState<string[]>([]);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [code, setCode] = useState(initial?.code ?? "");
+  const [summary, setSummary] = useState(initial?.summary ?? "");
+  const [targetAudience, setTargetAudience] = useState(
+    initial?.targetAudience ?? "",
+  );
+  const [skillsetIds, setSkillsetIds] = useState<string[]>(
+    initial?.skillsetIds ?? [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -43,13 +60,17 @@ export function CourseBuilderForm({
     event.preventDefault();
     setSaving(true);
     setError(null);
-    const result = await createCourse({
+    const payload = {
       title,
       code,
       summary,
       targetAudience,
       skillsetIds,
-    });
+    };
+    const result =
+      mode === "edit" && initial?.id
+        ? await updateCourse(initial.id, payload)
+        : await createCourse(payload);
     setSaving(false);
     if (!result.ok) {
       setError(result.error);
@@ -167,7 +188,11 @@ export function CourseBuilderForm({
         disabled={saving || skillsetIds.length < 2}
         className="justify-self-start rounded-md bg-teal px-5 py-3 font-medium text-white transition hover:bg-teal-deep disabled:opacity-60"
       >
-        {saving ? "Creating…" : "Create course information sheet"}
+        {saving
+          ? "Saving…"
+          : mode === "edit"
+            ? "Update course"
+            : "Create course information sheet"}
       </button>
     </form>
   );

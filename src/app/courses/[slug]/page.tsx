@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CourseActions } from "@/components/course-actions";
+import { getContributorAccess } from "@/lib/auth";
 import { getCourseBySlug } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +18,22 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CourseSheetPage({ params }: PageProps) {
   const { slug } = await params;
-  const course = await getCourseBySlug(slug);
+  const [course, access] = await Promise.all([
+    getCourseBySlug(slug),
+    getContributorAccess(),
+  ]);
   if (!course) notFound();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
-      <Link href="/courses" className="text-sm font-medium text-teal">
-        ← Back to courses
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/courses" className="text-sm font-medium text-teal">
+          ← Back to courses
+        </Link>
+        {access.allowed ? (
+          <CourseActions courseId={course.id} courseSlug={course.slug} />
+        ) : null}
+      </div>
 
       <article className="mt-6 rounded-xl border border-line bg-white/80 p-6 sm:p-10 print:border-0 print:p-0">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal">

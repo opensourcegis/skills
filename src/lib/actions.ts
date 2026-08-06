@@ -5,6 +5,8 @@ import { requireContributor } from "@/lib/auth";
 import {
   insertCourse,
   insertSkillset,
+  removeCourse,
+  replaceCourse,
   replaceSkillset,
 } from "@/lib/queries";
 import {
@@ -76,6 +78,36 @@ export async function createCourse(
     revalidatePath("/courses");
     revalidatePath(`/courses/${created.slug}`);
     return { ok: true, slug: created.slug };
+  } catch (error) {
+    return { ok: false, error: mapError(error) };
+  }
+}
+
+export async function updateCourse(
+  id: string,
+  raw: CourseFormValues,
+): Promise<ActionResult> {
+  try {
+    await requireContributor();
+    const values = courseFormSchema.parse(raw);
+    const updated = await replaceCourse(id, values);
+    if (!updated) return { ok: false, error: "Course not found." };
+    revalidatePath("/courses");
+    revalidatePath(`/courses/${updated.slug}`);
+    return { ok: true, slug: updated.slug };
+  } catch (error) {
+    return { ok: false, error: mapError(error) };
+  }
+}
+
+export async function deleteCourse(id: string): Promise<ActionResult> {
+  try {
+    await requireContributor();
+    const removed = await removeCourse(id);
+    if (!removed) return { ok: false, error: "Course not found." };
+    revalidatePath("/courses");
+    revalidatePath(`/courses/${removed.slug}`);
+    return { ok: true, slug: removed.slug };
   } catch (error) {
     return { ok: false, error: mapError(error) };
   }

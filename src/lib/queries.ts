@@ -315,3 +315,33 @@ export async function insertCourse(
   await saveDatabase(db);
   return course;
 }
+
+export async function replaceCourse(id: string, values: CourseFormValues) {
+  const db = await loadDatabase();
+  const index = db.courses.findIndex((item) => item.id === id);
+  if (index < 0) return null;
+
+  const existing = db.courses[index];
+  const updated: Course = {
+    ...existing,
+    title: values.title,
+    code: values.code,
+    slug: uniqueSlug(db.courses, values.title, id),
+    summary: values.summary,
+    targetAudience: values.targetAudience,
+    skillsetIds: values.skillsetIds,
+    updatedAt: new Date().toISOString(),
+  };
+  db.courses[index] = updated;
+  await saveDatabase(db);
+  return updated;
+}
+
+export async function removeCourse(id: string) {
+  const db = await loadDatabase();
+  const existing = db.courses.find((item) => item.id === id);
+  if (!existing) return null;
+  db.courses = db.courses.filter((item) => item.id !== id);
+  await saveDatabase(db);
+  return existing;
+}

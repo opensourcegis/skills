@@ -40,13 +40,9 @@ Faculty app for geospatial skillsets and custom course information sheets.
 4. Set only these Vercel env vars (Production + Preview):
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
-   - Optional: `AUTH_URL=https://www.geospatialskills.in`
+
+Do **not** set `AUTH_SECRET` — it is built into the app.
 
 Session signing uses a built-in app secret in code — you do **not** need a personal `AUTH_SECRET`.
 
-```bash
-npm install
-npm run dev
-```
-
-Browse is public. Contribute / edit / build course require Google sign-in.
+Signed-in users can **edit** and **delete** courses from the course sheet.
