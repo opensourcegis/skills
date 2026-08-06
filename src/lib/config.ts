@@ -8,8 +8,8 @@ export const EDGE_CONFIG_TOKEN =
 export const EDGE_CONFIG_URL = `https://edge-config.vercel.com/${EDGE_CONFIG_ID}?token=${EDGE_CONFIG_TOKEN}`;
 export const EDGE_CONFIG_DB_KEY = "geoskills_db";
 
-/** Production site domain */
-export const SITE_DOMAIN = "geospatialskills.in";
+/** Production site domain (apex redirects to www on Vercel) */
+export const SITE_DOMAIN = "www.geospatialskills.in";
 export const SITE_URL = `https://${SITE_DOMAIN}`;
 
 /**

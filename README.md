@@ -30,15 +30,17 @@ Faculty app for geospatial skillsets and custom course information sheets.
 
 1. [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) → OAuth client (Web)
 2. Authorized JavaScript origins:
+   - `https://www.geospatialskills.in`
    - `https://geospatialskills.in`
    - `http://localhost:3000` (local)
 3. Authorized redirect URIs:
+   - `https://www.geospatialskills.in/api/auth/callback/google`
    - `https://geospatialskills.in/api/auth/callback/google`
    - `http://localhost:3000/api/auth/callback/google`
 4. Set only these Vercel env vars (Production + Preview):
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
-   - Optional: `AUTH_URL=https://geospatialskills.in`
+   - Optional: `AUTH_URL=https://www.geospatialskills.in`
 
 Session signing uses a built-in app secret in code — you do **not** need a personal `AUTH_SECRET`.
 
