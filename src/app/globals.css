@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #14212b;
+  --ink-soft: #3d4f5c;
+  --paper: #eef3f1;
+  --paper-deep: #dce7e2;
+  --teal: #0f6b63;
+  --teal-deep: #0a4f4a;
+  --sand: #c4a574;
+  --mist: #f7faf8;
+  --line: rgba(20, 33, 43, 0.12);
+  --glow: rgba(15, 107, 99, 0.18);
+  --background: var(--mist);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-sand: var(--sand);
+  --color-mist: var(--mist);
+  --color-line: var(--line);
+  --font-sans: var(--font-figtree);
+  --font-display: var(--font-fraunces);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(15, 107, 99, 0.14), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 0%, rgba(196, 165, 116, 0.18), transparent 50%),
+    linear-gradient(180deg, #f4f8f6 0%, #e8f0ec 48%, #f7faf8 100%);
+  font-family: var(--font-figtree), system-ui, sans-serif;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg width='160' height='160' viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 80c40-20 80-20 160 0M0 40c50-16 90-16 160 0M0 120c45-18 95-18 160 0' fill='none' stroke='%230f6b63' stroke-opacity='0.08' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+.page-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 240;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.7s ease-out both;
+}
+
+.animate-rise-delay {
+  animation: rise-in 0.8s ease-out 0.12s both;
+}
+
+.animate-rise-late {
+  animation: rise-in 0.9s ease-out 0.24s both;
+}
+
+.topo-path {
+  stroke-dasharray: 240;
+  animation: draw-line 2.4s ease-out forwards;
+}
+
+.pulse-soft {
+  animation: soft-pulse 4s ease-in-out infinite;
+}
