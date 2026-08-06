@@ -1,14 +1,6 @@
 import Link from "next/link";
-import { auth, isGoogleAuthConfigured, signOut } from "@/auth";
-import { getContributorAccess } from "@/lib/auth";
 
 export async function SiteHeader() {
-  const googleReady = isGoogleAuthConfigured();
-  const access = googleReady
-    ? await getContributorAccess()
-    : { signedIn: false, allowed: false, email: null };
-  const session = googleReady ? await auth() : null;
-
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-[rgba(247,250,248,0.86)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
@@ -38,37 +30,12 @@ export async function SiteHeader() {
           >
             Browse
           </Link>
-          {access.allowed ? (
-            <Link
-              href="/contribute"
-              className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
-            >
-              Contribute
-            </Link>
-          ) : (
-            <Link
-              href={googleReady ? "/sign-in" : "/contribute"}
-              className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
-            >
-              {googleReady ? "Faculty sign in" : "Contribute"}
-            </Link>
-          )}
-          {session?.user ? (
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-            >
-              <button
-                type="submit"
-                className="rounded-md px-3 py-2 text-ink-soft transition hover:bg-paper hover:text-ink"
-                title={session.user.email ?? undefined}
-              >
-                Sign out
-              </button>
-            </form>
-          ) : null}
+          <Link
+            href="/contribute"
+            className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
+          >
+            Contribute
+          </Link>
         </nav>
       </div>
     </header>

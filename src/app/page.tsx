@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { databaseReady, listSkillsets } from "@/lib/queries";
+import { listSkillsets } from "@/lib/queries";
 import { SkillsetCard } from "@/components/skillset-card";
-import { SetupBanner } from "@/components/setup-banner";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const ready = await databaseReady();
-  const featured = ready ? await listSkillsets({}) : [];
+  const featured = await listSkillsets({});
 
   return (
     <div>
@@ -64,15 +64,13 @@ export default async function HomePage() {
               href="/contribute"
               className="rounded-md border border-white/50 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
             >
-              Contribute as faculty
+              Contribute a skillset
             </Link>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        {!ready ? <SetupBanner /> : null}
-
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <h2 className="display text-3xl text-ink">Featured skillsets</h2>
@@ -86,18 +84,11 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {featured.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line bg-white/60 px-5 py-10 text-ink-soft">
-            No skillsets yet. After Neon and Google auth are connected, run the seed
-            script or contribute the first entry.
-          </p>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {featured.slice(0, 6).map((skillset) => (
-              <SkillsetCard key={skillset.id} skillset={skillset} />
-            ))}
-          </div>
-        )}
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {featured.slice(0, 6).map((skillset) => (
+            <SkillsetCard key={skillset.id} skillset={skillset} />
+          ))}
+        </div>
       </section>
     </div>
   );

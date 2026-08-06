@@ -1,13 +1,8 @@
 import { Suspense } from "react";
 import { SkillsetCard } from "@/components/skillset-card";
 import { SkillsetFilters } from "@/components/skillset-filters";
-import { SetupBanner } from "@/components/setup-banner";
 import { LEVELS } from "@/lib/utils";
-import {
-  databaseReady,
-  getCatalogMeta,
-  listSkillsets,
-} from "@/lib/queries";
+import { getCatalogMeta, listSkillsets } from "@/lib/queries";
 
 type PageProps = {
   searchParams: Promise<{
@@ -20,25 +15,14 @@ type PageProps = {
   }>;
 };
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Browse skillsets",
 };
 
 export default async function SkillsetsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const ready = await databaseReady();
-
-  if (!ready) {
-    return (
-      <div className="mx-auto max-w-6xl px-6 py-12">
-        <h1 className="display text-4xl text-ink">Skillset catalog</h1>
-        <div className="mt-8">
-          <SetupBanner />
-        </div>
-      </div>
-    );
-  }
-
   const [meta, skillsets] = await Promise.all([
     getCatalogMeta(),
     listSkillsets({

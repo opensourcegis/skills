@@ -1,13 +1,13 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { SkillsetForm } from "@/components/skillset-form";
-import { getContributorAccess } from "@/lib/auth";
 import {
-  databaseReady,
   getSkillsetBySlug,
   listCompetencies,
   listTopics,
 } from "@/lib/queries";
 import type { BloomLevel, ExerciseType, Level } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -20,11 +20,6 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function EditSkillsetPage({ params }: PageProps) {
   const { slug } = await params;
-  const access = await getContributorAccess();
-  if (!access.signedIn) redirect("/sign-in?callbackUrl=/skillsets/" + slug + "/edit");
-  if (!access.allowed) redirect("/contribute");
-  if (!(await databaseReady())) notFound();
-
   const [skillset, topics, competencies] = await Promise.all([
     getSkillsetBySlug(slug),
     listTopics(),

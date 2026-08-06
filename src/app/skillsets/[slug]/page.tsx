@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getContributorAccess } from "@/lib/auth";
-import { databaseReady, getSkillsetBySlug } from "@/lib/queries";
+import { getSkillsetBySlug } from "@/lib/queries";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -9,19 +10,14 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  if (!(await databaseReady())) return { title: "Skillset" };
   const skillset = await getSkillsetBySlug(slug);
   return { title: skillset?.title ?? "Skillset" };
 }
 
 export default async function SkillsetDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  if (!(await databaseReady())) notFound();
-
   const skillset = await getSkillsetBySlug(slug);
   if (!skillset) notFound();
-
-  const access = await getContributorAccess();
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
@@ -41,14 +37,12 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
             {skillset.summary}
           </p>
         </div>
-        {access.allowed ? (
-          <Link
-            href={`/skillsets/${skillset.slug}/edit`}
-            className="rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-deep"
-          >
-            Edit
-          </Link>
-        ) : null}
+        <Link
+          href={`/skillsets/${skillset.slug}/edit`}
+          className="rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-deep"
+        >
+          Edit
+        </Link>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3 text-sm text-ink-soft">
