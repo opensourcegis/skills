@@ -1,4 +1,4 @@
-import { MongoClient, type Db } from "mongodb";
+import type { Db } from "mongodb";
 import { seedDatabase } from "@/data/seed-data";
 import type {
   AssessmentStrategyId,
@@ -7,10 +7,9 @@ import type {
   Skillset,
 } from "@/data/types";
 import { getMongoUri, MONGO_DB_NAME, MONGO_STATE_ID } from "@/lib/config";
+import client, { requireMongoClient } from "@/lib/mongodb";
 
 declare global {
-  // eslint-disable-next-line no-var
-  var __geoskillsMongoPromise: Promise<MongoClient> | undefined;
   // eslint-disable-next-line no-var
   var __geoskillsMemoryDb: GeoSkillsDb | undefined;
 }
@@ -78,35 +77,12 @@ function fromStored(doc: StoredState): GeoSkillsDb {
   });
 }
 
-async function getClient(): Promise<MongoClient> {
-  const uri = getMongoUri();
-  if (!uri) {
-    throw new Error(
-      "MongoDB is not configured. Set geospatialskills_storage_URL (or MONGODB_URI) in Vercel env.",
-    );
-  }
-
-  if (!globalThis.__geoskillsMongoPromise) {
-    const client = new MongoClient(uri, {
-      maxPoolSize: 5,
-      serverSelectionTimeoutMS: 8_000,
-    });
-    globalThis.__geoskillsMongoPromise = client.connect().catch((error) => {
-      globalThis.__geoskillsMongoPromise = undefined;
-      throw error;
-    });
-  }
-
-  return globalThis.__geoskillsMongoPromise;
-}
-
-async function getDb(): Promise<Db> {
-  const client = await getClient();
-  return client.db(MONGO_DB_NAME);
+function getDb(): Db {
+  return requireMongoClient().db(MONGO_DB_NAME);
 }
 
 async function readFromMongo(): Promise<GeoSkillsDb | null> {
-  const db = await getDb();
+  const db = getDb();
   const doc = (await db
     .collection<StoredState>(STATE_COLLECTION)
     .findOne({ _id: MONGO_STATE_ID })) as StoredState | null;
@@ -118,7 +94,7 @@ async function readFromMongo(): Promise<GeoSkillsDb | null> {
 }
 
 async function writeToMongo(data: GeoSkillsDb): Promise<void> {
-  const db = await getDb();
+  const db = getDb();
   const payload: StoredState = {
     _id: MONGO_STATE_ID,
     ...data,
@@ -136,7 +112,7 @@ export async function loadDatabase(): Promise<GeoSkillsDb> {
   }
 
   // Local/dev without Mongo: serve in-code seed only (writes will fail clearly).
-  if (!getMongoUri()) {
+  if (!client || !getMongoUri()) {
     const seeded = normalizeDb(cloneDb(seedDatabase));
     globalThis.__geoskillsMemoryDb = seeded;
     return cloneDb(seeded);
@@ -156,7 +132,7 @@ export async function loadDatabase(): Promise<GeoSkillsDb> {
   } catch (error) {
     console.error("MongoDB load failed:", error);
     throw new Error(
-      "Could not connect to MongoDB. Check geospatialskills_storage_URL and Atlas network access.",
+      "Could not connect to MongoDB. Check MONGODB_URI / geospatialskills_storage_URL and Atlas network access.",
     );
   }
 }
@@ -165,9 +141,9 @@ export async function saveDatabase(db: GeoSkillsDb): Promise<GeoSkillsDb> {
   const next = normalizeDb(cloneDb(db));
   globalThis.__geoskillsMemoryDb = next;
 
-  if (!getMongoUri()) {
+  if (!client || !getMongoUri()) {
     throw new Error(
-      "MongoDB is not configured. Set geospatialskills_storage_URL in Vercel, then redeploy.",
+      "MongoDB is not configured. Set MONGODB_URI or geospatialskills_storage_URL in Vercel, then redeploy.",
     );
   }
 
@@ -176,7 +152,7 @@ export async function saveDatabase(db: GeoSkillsDb): Promise<GeoSkillsDb> {
   } catch (error) {
     console.error("MongoDB save failed:", error);
     throw new Error(
-      "Could not save to MongoDB. Check geospatialskills_storage_URL and try again.",
+      "Could not save to MongoDB. Check MONGODB_URI / geospatialskills_storage_URL and try again.",
     );
   }
 

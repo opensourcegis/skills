@@ -15,9 +15,9 @@ export const AUTH_SECRET = "DUAMxRnZspU2wmwr5WhpImQXAMiAZVH0KB0sM5SEFkY=";
  */
 export function getMongoUri(): string {
   return (
+    process.env.MONGODB_URI ||
     process.env.geospatialskills_storage_URL ||
     process.env.GEOSPATIALSKILLS_STORAGE_URL ||
-    process.env.MONGODB_URI ||
     ""
   );
 }
