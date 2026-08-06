@@ -1,6 +1,11 @@
 import { createClient } from "@vercel/edge-config";
 import { seedDatabase } from "@/data/seed-data";
-import type { GeoSkillsDb } from "@/data/types";
+import type {
+  AssessmentStrategyId,
+  GeoSkillsDb,
+  SessionItem,
+  Skillset,
+} from "@/data/types";
 import {
   EDGE_CONFIG_DB_KEY,
   EDGE_CONFIG_ID,
@@ -15,6 +20,39 @@ declare global {
 
 function cloneDb(db: GeoSkillsDb): GeoSkillsDb {
   return structuredClone(db);
+}
+
+function normalizeSkillset(raw: Skillset): Skillset {
+  const legacyExercises = (raw.exercises ?? []).map((item, index) => {
+    const legacy = item as SessionItem & { exerciseType?: string };
+    return {
+      id: legacy.id || `legacy-ex-${index}`,
+      kind: "exercise" as const,
+      title: legacy.title,
+      description: legacy.description,
+      durationMinutes: legacy.durationMinutes ?? null,
+      sortOrder: legacy.sortOrder ?? index,
+    };
+  });
+
+  const sessions =
+    raw.sessions && raw.sessions.length > 0 ? raw.sessions : legacyExercises;
+
+  return {
+    ...raw,
+    sessions,
+    assessmentStrategyIds: (raw.assessmentStrategyIds ??
+      []) as AssessmentStrategyId[],
+  };
+}
+
+function normalizeDb(value: GeoSkillsDb): GeoSkillsDb {
+  return {
+    topics: value.topics ?? [],
+    competencies: value.competencies ?? [],
+    skillsets: (value.skillsets ?? []).map(normalizeSkillset),
+    courses: value.courses ?? [],
+  };
 }
 
 function isValidDb(value: unknown): value is GeoSkillsDb {
@@ -36,7 +74,7 @@ async function readFromEdgeConfig(): Promise<GeoSkillsDb | null> {
     const client = getEdgeClient();
     const value = await client.get<GeoSkillsDb>(EDGE_CONFIG_DB_KEY);
     if (isValidDb(value) && value.skillsets.length > 0) {
-      return cloneDb(value);
+      return normalizeDb(cloneDb(value));
     }
   } catch (error) {
     console.warn("Edge Config read failed; using in-code seed.", error);
@@ -80,7 +118,7 @@ async function writeToEdgeConfig(db: GeoSkillsDb): Promise<boolean> {
 
 export async function loadDatabase(): Promise<GeoSkillsDb> {
   if (globalThis.__geoskillsMemoryDb) {
-    return cloneDb(globalThis.__geoskillsMemoryDb);
+    return cloneDb(normalizeDb(globalThis.__geoskillsMemoryDb));
   }
 
   const fromEdge = await readFromEdgeConfig();
@@ -89,27 +127,17 @@ export async function loadDatabase(): Promise<GeoSkillsDb> {
     return cloneDb(fromEdge);
   }
 
-  const seeded = cloneDb(seedDatabase);
+  const seeded = normalizeDb(cloneDb(seedDatabase));
   globalThis.__geoskillsMemoryDb = seeded;
-  // Best-effort seed into Edge Config for later deploys/instances.
   void writeToEdgeConfig(seeded);
   return cloneDb(seeded);
 }
 
 export async function saveDatabase(db: GeoSkillsDb): Promise<GeoSkillsDb> {
-  const next = cloneDb(db);
+  const next = normalizeDb(cloneDb(db));
   globalThis.__geoskillsMemoryDb = next;
   await writeToEdgeConfig(next);
   return cloneDb(next);
-}
-
-export async function databaseReady() {
-  try {
-    const db = await loadDatabase();
-    return db.skillsets.length > 0 || db.topics.length > 0;
-  } catch {
-    return false;
-  }
 }
 
 export function newId(prefix: string) {

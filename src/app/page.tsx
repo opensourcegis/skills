@@ -61,10 +61,10 @@ export default async function HomePage() {
               Explore skillsets
             </Link>
             <Link
-              href="/contribute"
+              href="/courses"
               className="rounded-md border border-white/50 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
             >
-              Contribute a skillset
+              Browse courses
             </Link>
           </div>
         </div>

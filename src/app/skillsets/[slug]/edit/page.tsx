@@ -1,11 +1,12 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SkillsetForm } from "@/components/skillset-form";
+import { getContributorAccess } from "@/lib/auth";
 import {
   getSkillsetBySlug,
   listCompetencies,
   listTopics,
 } from "@/lib/queries";
-import type { BloomLevel, ExerciseType, Level } from "@/lib/utils";
+import type { AssessmentStrategyId, BloomLevel, Level, SessionKind } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,12 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function EditSkillsetPage({ params }: PageProps) {
   const { slug } = await params;
+  const access = await getContributorAccess();
+  if (!access.signedIn) {
+    redirect(`/sign-in?callbackUrl=/skillsets/${slug}/edit`);
+  }
+  if (!access.allowed) redirect("/contribute");
+
   const [skillset, topics, competencies] = await Promise.all([
     getSkillsetBySlug(slug),
     listTopics(),
@@ -46,17 +53,20 @@ export default async function EditSkillsetPage({ params }: PageProps) {
             level: skillset.level as Level,
             estimatedHours: skillset.estimatedHours,
             competencyIds: skillset.competencies.map((item) => item.id),
+            newCompetencies: [],
             objectives: skillset.objectives.map((item) => item.statement),
             outcomes: skillset.outcomes.map((item) => ({
               statement: item.statement,
               bloomLevel: (item.bloomLevel as BloomLevel) || "apply",
             })),
-            exercises: skillset.exercises.map((item) => ({
+            sessions: skillset.sessions.map((item) => ({
+              kind: item.kind as SessionKind,
               title: item.title,
               description: item.description,
-              exerciseType: item.exerciseType as ExerciseType,
               durationMinutes: item.durationMinutes,
             })),
+            assessmentStrategyIds:
+              skillset.assessmentStrategyIds as AssessmentStrategyId[],
           }}
         />
       </div>

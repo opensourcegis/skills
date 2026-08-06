@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { createSkillset, updateSkillset } from "@/lib/actions";
 import {
+  ASSESSMENT_STRATEGIES,
   BLOOM_LEVELS,
-  EXERCISE_TYPES,
   LEVELS,
+  SESSION_KINDS,
+  type AssessmentStrategyId,
   type BloomLevel,
-  type ExerciseType,
   type Level,
+  type SessionKind,
 } from "@/lib/utils";
 import type { SkillsetFormValues } from "@/lib/validators";
 
@@ -22,12 +24,25 @@ type SkillsetFormProps = {
   mode?: "create" | "edit";
 };
 
-const emptyExercise = {
+type DraftSession = {
+  kind: SessionKind;
+  title: string;
+  description: string;
+  durationMinutes: number | null;
+};
+
+type DraftCompetency = {
+  name: string;
+  category: string;
+  description: string;
+};
+
+const emptySession = (kind: SessionKind = "exercise"): DraftSession => ({
+  kind,
   title: "",
   description: "",
-  exerciseType: "lab" as ExerciseType,
-  durationMinutes: 90 as number | null,
-};
+  durationMinutes: 60,
+});
 
 export function SkillsetForm({
   topics,
@@ -50,18 +65,41 @@ export function SkillsetForm({
   const [competencyIds, setCompetencyIds] = useState<string[]>(
     initial?.competencyIds ?? [],
   );
+  const [newCompetencies, setNewCompetencies] = useState<DraftCompetency[]>([]);
   const [objectives, setObjectives] = useState<string[]>(
     initial?.objectives ?? [""],
   );
   const [outcomes, setOutcomes] = useState(
     initial?.outcomes ?? [{ statement: "", bloomLevel: "apply" as BloomLevel }],
   );
-  const [exercises, setExercises] = useState(
-    initial?.exercises ?? [emptyExercise],
+  const [sessions, setSessions] = useState<DraftSession[]>(
+    initial?.sessions?.length
+      ? initial.sessions.map((item) => ({
+          kind: item.kind,
+          title: item.title,
+          description: item.description,
+          durationMinutes: item.durationMinutes ?? null,
+        }))
+      : [
+          emptySession("theory"),
+          emptySession("demo"),
+          emptySession("exercise"),
+        ],
   );
+  const [assessmentStrategyIds, setAssessmentStrategyIds] = useState<
+    AssessmentStrategyId[]
+  >(initial?.assessmentStrategyIds ?? ["practical_lab_test"]);
 
   function toggleCompetency(id: string) {
     setCompetencyIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
+
+  function toggleAssessment(id: AssessmentStrategyId) {
+    setAssessmentStrategyIds((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
         : [...current, id],
@@ -81,11 +119,13 @@ export function SkillsetForm({
       level,
       estimatedHours,
       competencyIds,
+      newCompetencies: newCompetencies.filter((item) => item.name.trim()),
       objectives: objectives.filter(Boolean),
       outcomes: outcomes.filter((item) => item.statement.trim()),
-      exercises: exercises.filter(
+      sessions: sessions.filter(
         (item) => item.title.trim() && item.description.trim(),
       ),
+      assessmentStrategyIds,
     };
 
     const result =
@@ -94,7 +134,6 @@ export function SkillsetForm({
         : await createSkillset(payload);
 
     setSaving(false);
-
     if (!result.ok) {
       setError(result.error);
       return;
@@ -117,7 +156,6 @@ export function SkillsetForm({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="rounded-md border border-line bg-white px-3 py-2"
-            placeholder="e.g. Urban heat mapping with Landsat"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
@@ -189,10 +227,26 @@ export function SkillsetForm({
       </section>
 
       <section className="grid gap-4 border-t border-line pt-6">
-        <h2 className="display text-2xl text-ink">Competencies</h2>
-        <p className="text-sm text-ink-soft">
-          Select the competencies this skillset develops.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="display text-2xl text-ink">Competencies</h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              Tick existing competencies or add new ones for this skillset.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setNewCompetencies((current) => [
+                ...current,
+                { name: "", category: "Custom", description: "" },
+              ])
+            }
+            className="rounded-md bg-paper px-3 py-1.5 text-sm text-ink-soft"
+          >
+            Add new competency
+          </button>
+        </div>
         <div className="grid gap-2 sm:grid-cols-2">
           {competencies.map((competency) => {
             const checked = competencyIds.includes(competency.id);
@@ -216,6 +270,53 @@ export function SkillsetForm({
             );
           })}
         </div>
+        {newCompetencies.map((competency, index) => (
+          <div
+            key={`new-comp-${index}`}
+            className="grid gap-2 rounded-lg border border-dashed border-teal/40 bg-white/80 p-4 sm:grid-cols-3"
+          >
+            <input
+              value={competency.name}
+              onChange={(event) =>
+                setNewCompetencies((current) =>
+                  current.map((item, i) =>
+                    i === index ? { ...item, name: event.target.value } : item,
+                  ),
+                )
+              }
+              placeholder="New competency name"
+              className="rounded-md border border-line px-3 py-2 text-sm"
+            />
+            <input
+              value={competency.category}
+              onChange={(event) =>
+                setNewCompetencies((current) =>
+                  current.map((item, i) =>
+                    i === index
+                      ? { ...item, category: event.target.value }
+                      : item,
+                  ),
+                )
+              }
+              placeholder="Category"
+              className="rounded-md border border-line px-3 py-2 text-sm"
+            />
+            <input
+              value={competency.description}
+              onChange={(event) =>
+                setNewCompetencies((current) =>
+                  current.map((item, i) =>
+                    i === index
+                      ? { ...item, description: event.target.value }
+                      : item,
+                  ),
+                )
+              }
+              placeholder="Short description"
+              className="rounded-md border border-line px-3 py-2 text-sm"
+            />
+          </div>
+        ))}
       </section>
 
       <section className="grid gap-4 border-t border-line pt-6">
@@ -263,7 +364,10 @@ export function SkillsetForm({
           </button>
         </div>
         {outcomes.map((outcome, index) => (
-          <div key={`outcome-${index}`} className="grid gap-2 sm:grid-cols-[1fr_180px]">
+          <div
+            key={`outcome-${index}`}
+            className="grid gap-2 sm:grid-cols-[1fr_180px]"
+          >
             <input
               value={outcome.statement}
               onChange={(event) =>
@@ -305,60 +409,45 @@ export function SkillsetForm({
       </section>
 
       <section className="grid gap-4 border-t border-line pt-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="display text-2xl text-ink">Exercises</h2>
-          <button
-            type="button"
-            onClick={() =>
-              setExercises((current) => [...current, emptyExercise])
-            }
-            className="rounded-md bg-paper px-3 py-1.5 text-sm text-ink-soft"
-          >
-            Add exercise
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="display text-2xl text-ink">
+              Theory, demo & exercise sessions
+            </h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              Add lecture/theory blocks, demos, and student exercises.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SESSION_KINDS.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() =>
+                  setSessions((current) => [...current, emptySession(kind)])
+                }
+                className="rounded-md bg-paper px-3 py-1.5 text-sm capitalize text-ink-soft"
+              >
+                Add {kind}
+              </button>
+            ))}
+          </div>
         </div>
-        {exercises.map((exercise, index) => (
+        {sessions.map((session, index) => (
           <div
-            key={`exercise-${index}`}
+            key={`session-${index}`}
             className="grid gap-3 rounded-lg border border-line bg-white/80 p-4"
           >
-            <input
-              value={exercise.title}
-              onChange={(event) =>
-                setExercises((current) =>
-                  current.map((item, i) =>
-                    i === index ? { ...item, title: event.target.value } : item,
-                  ),
-                )
-              }
-              placeholder="Exercise title"
-              className="rounded-md border border-line px-3 py-2 text-sm"
-            />
-            <textarea
-              value={exercise.description}
-              onChange={(event) =>
-                setExercises((current) =>
-                  current.map((item, i) =>
-                    i === index
-                      ? { ...item, description: event.target.value }
-                      : item,
-                  ),
-                )
-              }
-              rows={3}
-              placeholder="What students do, tools used, deliverable"
-              className="rounded-md border border-line px-3 py-2 text-sm"
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-[160px_1fr_140px]">
               <select
-                value={exercise.exerciseType}
+                value={session.kind}
                 onChange={(event) =>
-                  setExercises((current) =>
+                  setSessions((current) =>
                     current.map((item, i) =>
                       i === index
                         ? {
                             ...item,
-                            exerciseType: event.target.value as ExerciseType,
+                            kind: event.target.value as SessionKind,
                           }
                         : item,
                     ),
@@ -366,19 +455,33 @@ export function SkillsetForm({
                 }
                 className="rounded-md border border-line px-3 py-2 text-sm capitalize"
               >
-                {EXERCISE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                {SESSION_KINDS.map((kind) => (
+                  <option key={kind} value={kind}>
+                    {kind}
                   </option>
                 ))}
               </select>
               <input
+                value={session.title}
+                onChange={(event) =>
+                  setSessions((current) =>
+                    current.map((item, i) =>
+                      i === index
+                        ? { ...item, title: event.target.value }
+                        : item,
+                    ),
+                  )
+                }
+                placeholder="Session title"
+                className="rounded-md border border-line px-3 py-2 text-sm"
+              />
+              <input
                 type="number"
                 min={15}
                 max={600}
-                value={exercise.durationMinutes ?? ""}
+                value={session.durationMinutes ?? ""}
                 onChange={(event) =>
-                  setExercises((current) =>
+                  setSessions((current) =>
                     current.map((item, i) =>
                       i === index
                         ? {
@@ -391,12 +494,62 @@ export function SkillsetForm({
                     ),
                   )
                 }
-                placeholder="Duration (minutes)"
+                placeholder="Minutes"
                 className="rounded-md border border-line px-3 py-2 text-sm"
               />
             </div>
+            <textarea
+              value={session.description}
+              onChange={(event) =>
+                setSessions((current) =>
+                  current.map((item, i) =>
+                    i === index
+                      ? { ...item, description: event.target.value }
+                      : item,
+                  ),
+                )
+              }
+              rows={3}
+              placeholder="What happens in this session"
+              className="rounded-md border border-line px-3 py-2 text-sm"
+            />
           </div>
         ))}
+      </section>
+
+      <section className="grid gap-4 border-t border-line pt-6">
+        <h2 className="display text-2xl text-ink">Assessment methods</h2>
+        <p className="text-sm text-ink-soft">
+          Tick the assessment strategies that fit this skillset.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ASSESSMENT_STRATEGIES.map((strategy) => {
+            const checked = assessmentStrategyIds.includes(strategy.id);
+            return (
+              <label
+                key={strategy.id}
+                className={`flex cursor-pointer items-start gap-3 rounded-md border px-3 py-3 text-sm transition ${
+                  checked
+                    ? "border-teal bg-teal/5"
+                    : "border-line bg-white hover:border-teal/40"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleAssessment(strategy.id)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="font-medium text-ink">{strategy.label}</span>
+                  <span className="mt-1 block text-ink-soft">
+                    {strategy.description}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </section>
 
       {error ? (

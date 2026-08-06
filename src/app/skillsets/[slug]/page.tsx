@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getContributorAccess } from "@/lib/auth";
 import { getSkillsetBySlug } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,11 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const skillset = await getSkillsetBySlug(slug);
   if (!skillset) notFound();
+  const access = await getContributorAccess();
+
+  const theory = skillset.sessions.filter((item) => item.kind === "theory");
+  const demos = skillset.sessions.filter((item) => item.kind === "demo");
+  const exercises = skillset.sessions.filter((item) => item.kind === "exercise");
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
@@ -37,12 +43,14 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
             {skillset.summary}
           </p>
         </div>
-        <Link
-          href={`/skillsets/${skillset.slug}/edit`}
-          className="rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-deep"
-        >
-          Edit
-        </Link>
+        {access.allowed ? (
+          <Link
+            href={`/skillsets/${skillset.slug}/edit`}
+            className="rounded-md bg-teal px-4 py-2 text-sm font-medium text-white hover:bg-teal-deep"
+          >
+            Edit
+          </Link>
+        ) : null}
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3 text-sm text-ink-soft">
@@ -54,9 +62,6 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
             ~{skillset.estimatedHours} hours
           </span>
         ) : null}
-        <span className="rounded-md bg-paper px-3 py-1">
-          by {skillset.createdByName || skillset.createdByEmail}
-        </span>
       </div>
 
       <section className="mt-10 border-t border-line pt-8">
@@ -78,11 +83,6 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
               <p className="mt-1 text-xs uppercase tracking-wide text-teal">
                 {competency.category}
               </p>
-              {competency.description ? (
-                <p className="mt-2 text-sm text-ink-soft">
-                  {competency.description}
-                </p>
-              ) : null}
             </li>
           ))}
         </ul>
@@ -116,30 +116,64 @@ export default async function SkillsetDetailPage({ params }: PageProps) {
         </ul>
       </section>
 
+      <SessionList title="Theory sessions" items={theory} />
+      <SessionList title="Demo sessions" items={demos} />
+      <SessionList title="Exercise sessions" items={exercises} />
+
       <section className="mt-10 border-t border-line pt-8">
-        <h2 className="display text-2xl">Exercises</h2>
-        <div className="mt-4 grid gap-4">
-          {skillset.exercises.map((exercise) => (
-            <article
-              key={exercise.id}
-              className="rounded-lg border border-line bg-white/70 p-5"
+        <h2 className="display text-2xl">Assessment methods</h2>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {skillset.assessments.map((item) => (
+            <li
+              key={item.id}
+              className="rounded-lg border border-line bg-white/70 px-4 py-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="font-semibold text-ink">{exercise.title}</h3>
-                <p className="text-xs uppercase tracking-wide text-ink-soft">
-                  {exercise.exerciseType}
-                  {exercise.durationMinutes
-                    ? ` · ${exercise.durationMinutes} min`
-                    : ""}
-                </p>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-                {exercise.description}
-              </p>
-            </article>
+              <p className="font-medium text-ink">{item.label}</p>
+              <p className="mt-1 text-sm text-ink-soft">{item.description}</p>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
     </div>
+  );
+}
+
+function SessionList({
+  title,
+  items,
+}: {
+  title: string;
+  items: {
+    id: string;
+    title: string;
+    description: string;
+    durationMinutes: number | null;
+  }[];
+}) {
+  if (!items.length) return null;
+  return (
+    <section className="mt-10 border-t border-line pt-8">
+      <h2 className="display text-2xl">{title}</h2>
+      <div className="mt-4 grid gap-4">
+        {items.map((item) => (
+          <article
+            key={item.id}
+            className="rounded-lg border border-line bg-white/70 p-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-semibold text-ink">{item.title}</h3>
+              {item.durationMinutes ? (
+                <p className="text-xs text-ink-soft">
+                  {item.durationMinutes} min
+                </p>
+              ) : null}
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              {item.description}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

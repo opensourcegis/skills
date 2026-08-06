@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { auth, isGoogleAuthConfigured, signOut } from "@/auth";
+import { getContributorAccess } from "@/lib/auth";
 
 export async function SiteHeader() {
+  const access = await getContributorAccess();
+  const session = isGoogleAuthConfigured() ? await auth() : null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-[rgba(247,250,248,0.86)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
@@ -28,14 +33,53 @@ export async function SiteHeader() {
             href="/skillsets"
             className="rounded-md px-3 py-2 text-ink-soft transition hover:bg-paper hover:text-ink"
           >
-            Browse
+            Skillsets
           </Link>
           <Link
-            href="/contribute"
-            className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
+            href="/courses"
+            className="rounded-md px-3 py-2 text-ink-soft transition hover:bg-paper hover:text-ink"
           >
-            Contribute
+            Courses
           </Link>
+          {access.allowed ? (
+            <>
+              <Link
+                href="/contribute"
+                className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
+              >
+                Contribute
+              </Link>
+              <Link
+                href="/courses/new"
+                className="rounded-md border border-teal px-3 py-2 font-medium text-teal transition hover:bg-teal/5"
+              >
+                Build course
+              </Link>
+            </>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
+            >
+              Faculty sign in
+            </Link>
+          )}
+          {session?.user ? (
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
+            >
+              <button
+                type="submit"
+                className="rounded-md px-3 py-2 text-ink-soft transition hover:bg-paper"
+                title={session.user.email ?? undefined}
+              >
+                Sign out
+              </button>
+            </form>
+          ) : null}
         </nav>
       </div>
     </header>

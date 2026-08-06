@@ -6,12 +6,20 @@ export type BloomLevel =
   | "analyze"
   | "evaluate"
   | "create";
-export type ExerciseType =
-  | "lab"
-  | "fieldwork"
-  | "project"
-  | "discussion"
-  | "assessment";
+
+export type SessionKind = "theory" | "demo" | "exercise";
+
+export type AssessmentStrategyId =
+  | "quiz_mcq"
+  | "practical_lab_test"
+  | "project_portfolio"
+  | "presentation_viva"
+  | "peer_assessment"
+  | "rubric_assignment"
+  | "field_report"
+  | "open_book_test"
+  | "continuous_assessment"
+  | "capstone_mini_project";
 
 export type Topic = {
   id: string;
@@ -41,11 +49,11 @@ export type Outcome = {
   sortOrder: number;
 };
 
-export type Exercise = {
+export type SessionItem = {
   id: string;
+  kind: SessionKind;
   title: string;
   description: string;
-  exerciseType: ExerciseType;
   durationMinutes: number | null;
   sortOrder: number;
 };
@@ -66,15 +74,33 @@ export type Skillset = {
   competencyIds: string[];
   objectives: Objective[];
   outcomes: Outcome[];
-  exercises: Exercise[];
+  /** @deprecated prefer sessions; kept for older records */
+  exercises?: SessionItem[];
+  sessions: SessionItem[];
+  assessmentStrategyIds: AssessmentStrategyId[];
+};
+
+export type Course = {
+  id: string;
+  title: string;
+  slug: string;
+  code: string;
+  summary: string;
+  targetAudience: string;
+  skillsetIds: string[];
+  createdByEmail: string;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type GeoSkillsDb = {
   topics: Topic[];
   competencies: Competency[];
   skillsets: Skillset[];
+  courses: Course[];
 };
 
 export function emptyDb(): GeoSkillsDb {
-  return { topics: [], competencies: [], skillsets: [] };
+  return { topics: [], competencies: [], skillsets: [], courses: [] };
 }

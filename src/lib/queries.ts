@@ -1,7 +1,14 @@
 import { loadDatabase, saveDatabase, newId } from "@/data/store";
-import type { GeoSkillsDb, Skillset } from "@/data/types";
-import { slugify } from "@/lib/utils";
-import type { SkillsetFormValues } from "@/lib/validators";
+import type {
+  AssessmentStrategyId,
+  Competency,
+  Course,
+  GeoSkillsDb,
+  SessionItem,
+  Skillset,
+} from "@/data/types";
+import { ASSESSMENT_STRATEGIES, slugify } from "@/lib/utils";
+import type { CourseFormValues, SkillsetFormValues } from "@/lib/validators";
 
 export type SkillsetFilters = {
   q?: string;
@@ -16,12 +23,15 @@ function withRelations(db: GeoSkillsDb, skillset: Skillset) {
   const competencies = db.competencies.filter((item) =>
     skillset.competencyIds.includes(item.id),
   );
+  const assessments = ASSESSMENT_STRATEGIES.filter((item) =>
+    skillset.assessmentStrategyIds.includes(item.id),
+  );
   return {
     ...skillset,
     topicName: topic?.name ?? "Untitled topic",
     topicSlug: topic?.slug ?? "topic",
     competencies,
-    outcomes: skillset.outcomes,
+    assessments,
   };
 }
 
@@ -88,20 +98,19 @@ export async function getCatalogMeta() {
     competencies: [...db.competencies].sort((a, b) =>
       a.name.localeCompare(b.name),
     ),
-    outcomeHints: db.skillsets
-      .flatMap((item) => item.outcomes.map((outcome) => outcome.statement))
-      .slice(0, 20),
   };
 }
 
-function uniqueSlug(db: GeoSkillsDb, title: string, excludeId?: string) {
-  const base = slugify(title) || "skillset";
+function uniqueSlug(
+  existing: { slug: string; id?: string }[],
+  title: string,
+  excludeId?: string,
+) {
+  const base = slugify(title) || "item";
   let candidate = base;
   let attempt = 2;
   while (
-    db.skillsets.some(
-      (item) => item.slug === candidate && item.id !== excludeId,
-    )
+    existing.some((item) => item.slug === candidate && item.id !== excludeId)
   ) {
     candidate = `${base}-${attempt}`;
     attempt += 1;
@@ -109,9 +118,58 @@ function uniqueSlug(db: GeoSkillsDb, title: string, excludeId?: string) {
   return candidate;
 }
 
-function buildNested(values: SkillsetFormValues) {
-  return {
-    competencyIds: values.competencyIds,
+function buildSessions(values: SkillsetFormValues): SessionItem[] {
+  return values.sessions.map((session, index) => ({
+    id: newId("sess"),
+    kind: session.kind,
+    title: session.title,
+    description: session.description,
+    durationMinutes: session.durationMinutes ?? null,
+    sortOrder: index,
+  }));
+}
+
+function ensureCompetencies(
+  db: GeoSkillsDb,
+  values: SkillsetFormValues,
+): string[] {
+  const ids = [...values.competencyIds];
+  for (const created of values.newCompetencies ?? []) {
+    const slug = uniqueSlug(db.competencies, created.name);
+    const competency: Competency = {
+      id: newId("comp"),
+      name: created.name,
+      slug,
+      category: created.category,
+      description: created.description?.trim() || "",
+    };
+    db.competencies.push(competency);
+    ids.push(competency.id);
+  }
+  return [...new Set(ids)];
+}
+
+export async function insertSkillset(
+  values: SkillsetFormValues,
+  contributor: { email: string; name: string | null },
+) {
+  const db = await loadDatabase();
+  const now = new Date().toISOString();
+  const competencyIds = ensureCompetencies(db, values);
+  const skillset: Skillset = {
+    id: newId("skill"),
+    title: values.title,
+    slug: uniqueSlug(db.skillsets, values.title),
+    summary: values.summary,
+    description: values.description,
+    topicId: values.topicId,
+    level: values.level,
+    estimatedHours: values.estimatedHours ?? null,
+    createdByEmail: contributor.email,
+    createdByName: contributor.name,
+    createdAt: now,
+    updatedAt: now,
+    competencyIds,
     objectives: values.objectives.map((statement, index) => ({
       id: newId("obj"),
       statement,
@@ -123,63 +181,137 @@ function buildNested(values: SkillsetFormValues) {
       bloomLevel: outcome.bloomLevel ?? null,
       sortOrder: index,
     })),
-    exercises: values.exercises.map((exercise, index) => ({
-      id: newId("ex"),
-      title: exercise.title,
-      description: exercise.description,
-      exerciseType: exercise.exerciseType,
-      durationMinutes: exercise.durationMinutes ?? null,
-      sortOrder: index,
-    })),
-  };
-}
-
-export async function insertSkillset(values: SkillsetFormValues) {
-  const db = await loadDatabase();
-  const now = new Date().toISOString();
-  const nested = buildNested(values);
-  const skillset: Skillset = {
-    id: newId("skill"),
-    title: values.title,
-    slug: uniqueSlug(db, values.title),
-    summary: values.summary,
-    description: values.description,
-    topicId: values.topicId,
-    level: values.level,
-    estimatedHours: values.estimatedHours ?? null,
-    createdByEmail: "faculty@geoskills.local",
-    createdByName: "Faculty contributor",
-    createdAt: now,
-    updatedAt: now,
-    ...nested,
+    sessions: buildSessions(values),
+    assessmentStrategyIds: values.assessmentStrategyIds as AssessmentStrategyId[],
   };
   db.skillsets.unshift(skillset);
   await saveDatabase(db);
   return skillset;
 }
 
-export async function replaceSkillset(id: string, values: SkillsetFormValues) {
+export async function replaceSkillset(
+  id: string,
+  values: SkillsetFormValues,
+) {
   const db = await loadDatabase();
   const index = db.skillsets.findIndex((item) => item.id === id);
   if (index < 0) return null;
 
   const existing = db.skillsets[index];
-  const nested = buildNested(values);
+  const competencyIds = ensureCompetencies(db, values);
   const updated: Skillset = {
     ...existing,
     title: values.title,
-    slug: uniqueSlug(db, values.title, id),
+    slug: uniqueSlug(db.skillsets, values.title, id),
     summary: values.summary,
     description: values.description,
     topicId: values.topicId,
     level: values.level,
     estimatedHours: values.estimatedHours ?? null,
     updatedAt: new Date().toISOString(),
-    ...nested,
+    competencyIds,
+    objectives: values.objectives.map((statement, i) => ({
+      id: newId("obj"),
+      statement,
+      sortOrder: i,
+    })),
+    outcomes: values.outcomes.map((outcome, i) => ({
+      id: newId("out"),
+      statement: outcome.statement,
+      bloomLevel: outcome.bloomLevel ?? null,
+      sortOrder: i,
+    })),
+    sessions: buildSessions(values),
+    assessmentStrategyIds: values.assessmentStrategyIds as AssessmentStrategyId[],
   };
   db.skillsets[index] = updated;
   await saveDatabase(db);
   return updated;
 }
 
-export { databaseReady } from "@/data/store";
+export async function listCourses() {
+  const db = await loadDatabase();
+  return [...db.courses].sort(
+    (a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+}
+
+export async function getCourseBySlug(slug: string) {
+  const db = await loadDatabase();
+  const course = db.courses.find((item) => item.slug === slug);
+  if (!course) return null;
+
+  const skillsets = course.skillsetIds
+    .map((id) => db.skillsets.find((item) => item.id === id))
+    .filter(Boolean)
+    .map((skillset) => withRelations(db, skillset!));
+
+  const competencyMap = new Map(
+    skillsets.flatMap((skillset) =>
+      skillset.competencies.map((item) => [item.id, item] as const),
+    ),
+  );
+  const objectiveStatements = skillsets.flatMap((skillset) =>
+    skillset.objectives.map((item) => ({
+      statement: item.statement,
+      from: skillset.title,
+    })),
+  );
+  const outcomeStatements = skillsets.flatMap((skillset) =>
+    skillset.outcomes.map((item) => ({
+      statement: item.statement,
+      bloomLevel: item.bloomLevel,
+      from: skillset.title,
+    })),
+  );
+  const sessions = skillsets.flatMap((skillset) =>
+    skillset.sessions.map((session) => ({
+      ...session,
+      from: skillset.title,
+    })),
+  );
+  const assessmentIds = [
+    ...new Set(skillsets.flatMap((item) => item.assessmentStrategyIds)),
+  ];
+  const assessments = ASSESSMENT_STRATEGIES.filter((item) =>
+    assessmentIds.includes(item.id),
+  );
+
+  return {
+    ...course,
+    skillsets,
+    competencies: [...competencyMap.values()],
+    objectives: objectiveStatements,
+    outcomes: outcomeStatements,
+    sessions,
+    assessments,
+    theorySessions: sessions.filter((item) => item.kind === "theory"),
+    demoSessions: sessions.filter((item) => item.kind === "demo"),
+    exerciseSessions: sessions.filter((item) => item.kind === "exercise"),
+  };
+}
+
+export async function insertCourse(
+  values: CourseFormValues,
+  contributor: { email: string; name: string | null },
+) {
+  const db = await loadDatabase();
+  const now = new Date().toISOString();
+  const course: Course = {
+    id: newId("course"),
+    title: values.title,
+    code: values.code,
+    slug: uniqueSlug(db.courses, values.title),
+    summary: values.summary,
+    targetAudience: values.targetAudience,
+    skillsetIds: values.skillsetIds,
+    createdByEmail: contributor.email,
+    createdByName: contributor.name,
+    createdAt: now,
+    updatedAt: now,
+  };
+  db.courses.unshift(course);
+  await saveDatabase(db);
+  return course;
+}

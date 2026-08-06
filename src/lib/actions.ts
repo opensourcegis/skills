@@ -1,28 +1,52 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { insertSkillset, replaceSkillset } from "@/lib/queries";
-import { skillsetFormSchema, type SkillsetFormValues } from "@/lib/validators";
+import { requireContributor } from "@/lib/auth";
+import {
+  insertCourse,
+  insertSkillset,
+  replaceSkillset,
+} from "@/lib/queries";
+import {
+  courseFormSchema,
+  skillsetFormSchema,
+  type CourseFormValues,
+  type SkillsetFormValues,
+} from "@/lib/validators";
 
 export type ActionResult =
   | { ok: true; slug: string }
   | { ok: false; error: string };
 
+function mapError(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.message === "UNAUTHORIZED") {
+      return "Please sign in with Google to contribute.";
+    }
+    if (error.message === "FORBIDDEN") {
+      return "Your Google account is not on the faculty allowlist.";
+    }
+    if (error.message === "AUTH_NOT_CONFIGURED") {
+      return "Google sign-in is not configured yet (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / AUTH_SECRET).";
+    }
+  }
+  return "Unable to save. Check the form and try again.";
+}
+
 export async function createSkillset(
   raw: SkillsetFormValues,
 ): Promise<ActionResult> {
   try {
+    const contributor = await requireContributor();
     const values = skillsetFormSchema.parse(raw);
-    const created = await insertSkillset(values);
+    const created = await insertSkillset(values, contributor);
     revalidatePath("/");
     revalidatePath("/skillsets");
+    revalidatePath("/courses");
     revalidatePath(`/skillsets/${created.slug}`);
     return { ok: true, slug: created.slug };
-  } catch {
-    return {
-      ok: false,
-      error: "Unable to save skillset. Check the form and try again.",
-    };
+  } catch (error) {
+    return { ok: false, error: mapError(error) };
   }
 }
 
@@ -31,19 +55,31 @@ export async function updateSkillset(
   raw: SkillsetFormValues,
 ): Promise<ActionResult> {
   try {
+    await requireContributor();
     const values = skillsetFormSchema.parse(raw);
     const updated = await replaceSkillset(id, values);
-    if (!updated) {
-      return { ok: false, error: "Skillset not found." };
-    }
+    if (!updated) return { ok: false, error: "Skillset not found." };
     revalidatePath("/");
     revalidatePath("/skillsets");
+    revalidatePath("/courses");
     revalidatePath(`/skillsets/${updated.slug}`);
     return { ok: true, slug: updated.slug };
-  } catch {
-    return {
-      ok: false,
-      error: "Unable to update skillset. Check the form and try again.",
-    };
+  } catch (error) {
+    return { ok: false, error: mapError(error) };
+  }
+}
+
+export async function createCourse(
+  raw: CourseFormValues,
+): Promise<ActionResult> {
+  try {
+    const contributor = await requireContributor();
+    const values = courseFormSchema.parse(raw);
+    const created = await insertCourse(values, contributor);
+    revalidatePath("/courses");
+    revalidatePath(`/courses/${created.slug}`);
+    return { ok: true, slug: created.slug };
+  } catch (error) {
+    return { ok: false, error: mapError(error) };
   }
 }

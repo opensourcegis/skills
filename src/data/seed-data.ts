@@ -1,6 +1,17 @@
-import type { GeoSkillsDb } from "./types";
+import type { GeoSkillsDb, SessionItem, Skillset } from "./types";
 
 const now = "2026-08-06T00:00:00.000Z";
+
+function sessions(
+  items: Omit<SessionItem, "id" | "sortOrder">[],
+  prefix: string,
+): SessionItem[] {
+  return items.map((item, index) => ({
+    ...item,
+    id: `${prefix}-${index + 1}`,
+    sortOrder: index,
+  }));
+}
 
 export const seedDatabase: GeoSkillsDb = {
   topics: [
@@ -101,7 +112,7 @@ export const seedDatabase: GeoSkillsDb = {
       summary:
         "Plan and deliver a land-cover classification course module using optical satellite imagery.",
       description:
-        "Faculty can use this skillset to scaffold a remote-sensing unit that moves from sensor basics to supervised classification and accuracy assessment. Emphasis is on defensible class schemas and interpretation for environmental planning.",
+        "Faculty can use this skillset to scaffold a remote-sensing unit that moves from sensor basics to supervised classification and accuracy assessment.",
       topicId: "topic-remote-sensing",
       level: "intermediate",
       estimatedHours: 18,
@@ -153,25 +164,43 @@ export const seedDatabase: GeoSkillsDb = {
           sortOrder: 2,
         },
       ],
-      exercises: [
-        {
-          id: "ex-lc-1",
-          title: "Signature exploration lab",
-          description:
-            "Compare NDVI and false-color composites for urban, cropland, and forest sites.",
-          exerciseType: "lab",
-          durationMinutes: 90,
-          sortOrder: 0,
-        },
-        {
-          id: "ex-lc-2",
-          title: "Supervised classification project",
-          description:
-            "Train a classifier, validate with hold-out samples, and write a one-page methods note.",
-          exerciseType: "project",
-          durationMinutes: 180,
-          sortOrder: 1,
-        },
+      sessions: sessions(
+        [
+          {
+            kind: "theory",
+            title: "Sensors, bands, and spectral signatures",
+            description:
+              "Lecture on optical sensors, atmospheric effects, and class separability.",
+            durationMinutes: 60,
+          },
+          {
+            kind: "demo",
+            title: "False-color and index workflows",
+            description:
+              "Instructor demo of NDVI and composite interpretation in GIS software.",
+            durationMinutes: 45,
+          },
+          {
+            kind: "exercise",
+            title: "Signature exploration lab",
+            description:
+              "Compare NDVI and false-color composites for urban, cropland, and forest sites.",
+            durationMinutes: 90,
+          },
+          {
+            kind: "exercise",
+            title: "Supervised classification project",
+            description:
+              "Train a classifier, validate with hold-out samples, and write a methods note.",
+            durationMinutes: 180,
+          },
+        ],
+        "sess-lc",
+      ),
+      assessmentStrategyIds: [
+        "practical_lab_test",
+        "project_portfolio",
+        "rubric_assignment",
       ],
     },
     {
@@ -181,7 +210,7 @@ export const seedDatabase: GeoSkillsDb = {
       summary:
         "Introduce weighted overlay and multi-criteria evaluation for facilities or green-space siting.",
       description:
-        "A compact skillset for first GIS courses. Students combine slope, access, land use, and environmental constraints into transparent suitability scores suitable for planning studios.",
+        "A compact skillset for first GIS courses combining criteria design with transparent suitability scoring.",
       topicId: "topic-gis-analysis",
       level: "beginner",
       estimatedHours: 12,
@@ -223,25 +252,43 @@ export const seedDatabase: GeoSkillsDb = {
           sortOrder: 1,
         },
       ],
-      exercises: [
-        {
-          id: "ex-su-1",
-          title: "Criteria workshop",
-          description:
-            "In small groups, define criteria, scales, and weights for a proposed amenity.",
-          exerciseType: "discussion",
-          durationMinutes: 60,
-          sortOrder: 0,
-        },
-        {
-          id: "ex-su-2",
-          title: "Weighted overlay lab",
-          description:
-            "Build the model, sensitivity-test two weight sets, and annotate the final map.",
-          exerciseType: "lab",
-          durationMinutes: 120,
-          sortOrder: 1,
-        },
+      sessions: sessions(
+        [
+          {
+            kind: "theory",
+            title: "Multi-criteria decision making in GIS",
+            description:
+              "Introduce criteria scales, weights, and common suitability pitfalls.",
+            durationMinutes: 50,
+          },
+          {
+            kind: "demo",
+            title: "Weighted overlay walkthrough",
+            description:
+              "Live demo building a simple suitability model with two weight sets.",
+            durationMinutes: 40,
+          },
+          {
+            kind: "exercise",
+            title: "Criteria workshop",
+            description:
+              "In small groups, define criteria, scales, and weights for a proposed amenity.",
+            durationMinutes: 60,
+          },
+          {
+            kind: "exercise",
+            title: "Weighted overlay lab",
+            description:
+              "Build the model, sensitivity-test two weight sets, and annotate the final map.",
+            durationMinutes: 120,
+          },
+        ],
+        "sess-su",
+      ),
+      assessmentStrategyIds: [
+        "quiz_mcq",
+        "presentation_viva",
+        "continuous_assessment",
       ],
     },
     {
@@ -251,7 +298,7 @@ export const seedDatabase: GeoSkillsDb = {
       summary:
         "Teach faculty how to structure notebook-to-script geospatial pipelines for course projects.",
       description:
-        "Focuses on reproducible analysis: project layout, CRS hygiene, vector/raster IO, and lightweight automation for recurring student datasets.",
+        "Focuses on reproducible analysis: project layout, CRS hygiene, vector/raster IO, and lightweight automation.",
       topicId: "topic-spatial-ds",
       level: "advanced",
       estimatedHours: 24,
@@ -295,25 +342,43 @@ export const seedDatabase: GeoSkillsDb = {
           sortOrder: 1,
         },
       ],
-      exercises: [
-        {
-          id: "ex-py-1",
-          title: "Pipeline clinic",
-          description:
-            "Refactor a messy notebook into modular functions with assertions for CRS and schema.",
-          exerciseType: "lab",
-          durationMinutes: 150,
-          sortOrder: 0,
-        },
-        {
-          id: "ex-py-2",
-          title: "Mini map publish",
-          description:
-            "Export cleaned GeoJSON and embed an interactive map in a short faculty brief.",
-          exerciseType: "project",
-          durationMinutes: 120,
-          sortOrder: 1,
-        },
+      sessions: sessions(
+        [
+          {
+            kind: "theory",
+            title: "Reproducible geospatial project layout",
+            description:
+              "Cover environments, data folders, notebooks vs scripts, and CRS hygiene.",
+            durationMinutes: 60,
+          },
+          {
+            kind: "demo",
+            title: "From messy notebook to modules",
+            description:
+              "Live refactor of a notebook into functions with schema assertions.",
+            durationMinutes: 50,
+          },
+          {
+            kind: "exercise",
+            title: "Pipeline clinic",
+            description:
+              "Refactor a messy notebook into modular functions with assertions for CRS and schema.",
+            durationMinutes: 150,
+          },
+          {
+            kind: "exercise",
+            title: "Mini map publish",
+            description:
+              "Export cleaned GeoJSON and embed an interactive map in a short faculty brief.",
+            durationMinutes: 120,
+          },
+        ],
+        "sess-py",
+      ),
+      assessmentStrategyIds: [
+        "project_portfolio",
+        "peer_assessment",
+        "capstone_mini_project",
       ],
     },
     {
@@ -323,7 +388,7 @@ export const seedDatabase: GeoSkillsDb = {
       summary:
         "Plan outdoor labs that collect reliable GNSS points and lines for teaching basemaps.",
       description:
-        "Covers mission planning, receiver settings, metadata, and QA so field days produce usable classroom datasets rather than noisy tracks.",
+        "Covers mission planning, receiver settings, metadata, and QA so field days produce usable classroom datasets.",
       topicId: "topic-geodesy",
       level: "intermediate",
       estimatedHours: 10,
@@ -367,26 +432,45 @@ export const seedDatabase: GeoSkillsDb = {
           sortOrder: 1,
         },
       ],
-      exercises: [
-        {
-          id: "ex-gn-1",
-          title: "Campus transect",
-          description:
-            "Collect waypoints along a transect, record metadata, and compare phone vs survey-grade accuracy if available.",
-          exerciseType: "fieldwork",
-          durationMinutes: 120,
-          sortOrder: 0,
-        },
-        {
-          id: "ex-gn-2",
-          title: "Basemap assembly",
-          description:
-            "Clean geometries, assign symbology, and publish a shared course basemap layer.",
-          exerciseType: "lab",
-          durationMinutes: 90,
-          sortOrder: 1,
-        },
+      sessions: sessions(
+        [
+          {
+            kind: "theory",
+            title: "GNSS error sources and mission planning",
+            description:
+              "Discuss multipath, dilution of precision, and attribution standards.",
+            durationMinutes: 45,
+          },
+          {
+            kind: "demo",
+            title: "Receiver setup and metadata capture",
+            description:
+              "Demo configuring a receiver/app and logging QA fields before going outside.",
+            durationMinutes: 30,
+          },
+          {
+            kind: "exercise",
+            title: "Campus transect",
+            description:
+              "Collect waypoints along a transect and compare phone vs survey-grade accuracy if available.",
+            durationMinutes: 120,
+          },
+          {
+            kind: "exercise",
+            title: "Basemap assembly",
+            description:
+              "Clean geometries, assign symbology, and publish a shared course basemap layer.",
+            durationMinutes: 90,
+          },
+        ],
+        "sess-gn",
+      ),
+      assessmentStrategyIds: [
+        "field_report",
+        "practical_lab_test",
+        "continuous_assessment",
       ],
     },
-  ],
+  ] satisfies Skillset[],
+  courses: [],
 };

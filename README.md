@@ -1,28 +1,23 @@
 # GeoSkills Atlas
 
-Faculty-facing Vercel app for a database of geospatial skillsets — competencies, objectives, outcomes, and exercises.
+Faculty app for geospatial skillsets and custom course information sheets.
 
-## Stack
+## Features
 
-- **Next.js** (App Router) on Vercel
-- **In-code seed data** + **Vercel Edge Config** persistence (`src/lib/config.ts`)
-- **No authentication** for now (open contribute/edit)
+- Browse skillsets (cards/list + filters)
+- **Google sign-in** required to contribute or build courses
+- Add **new competencies**, **theory / demo / exercise sessions**, and tick **assessment methods**
+- **Courses** tab: combine skillsets → course information sheet (objectives, outcomes, competencies, sessions, assessments)
 
-## Local
+## Setup
+
+1. Create a Google OAuth Web client  
+   Redirect: `https://YOUR-DOMAIN/api/auth/callback/google`
+2. Set Vercel env vars: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`  
+   Optional: `ALLOWED_EMAILS` (comma-separated). If empty, any Google user can contribute.
+3. Redeploy. Turn off **Deployment Protection → Vercel Authentication** so visitors are not asked for a Vercel account.
 
 ```bash
 npm install
 npm run dev
 ```
-
-Open http://localhost:3000
-
-## Data
-
-- Seed catalog lives in `src/data/seed-data.ts`
-- Runtime store: `src/data/store.ts` reads/writes Edge Config key `geoskills_db`
-- Edge Config ID/token are set in `src/lib/config.ts`
-
-## Deploy
-
-Push to `main`. Ensure the Edge Config store is connected to the Vercel project. Turn off **Deployment Protection → Vercel Authentication** so the public URL does not require a Vercel login.
