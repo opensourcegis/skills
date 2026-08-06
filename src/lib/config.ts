@@ -11,10 +11,12 @@ export const AUTH_SECRET = "DUAMxRnZspU2wmwr5WhpImQXAMiAZVH0KB0sM5SEFkY=";
 
 /**
  * MongoDB Atlas (Vercel Marketplace) connection.
- * Custom prefix used when provisioning: geospatialskills_storage → geospatialskills_storage_URL
+ * Custom prefix geospatialskills_storage → geospatialskills_storage_MONGODB_URI
  */
 export function getMongoUri(): string {
   return (
+    process.env.geospatialskills_storage_MONGODB_URI ||
+    process.env.GEOSPATIALSKILLS_STORAGE_MONGODB_URI ||
     process.env.MONGODB_URI ||
     process.env.geospatialskills_storage_URL ||
     process.env.GEOSPATIALSKILLS_STORAGE_URL ||

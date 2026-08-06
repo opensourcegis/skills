@@ -22,7 +22,7 @@ export default client;
 export function requireMongoClient(): MongoClient {
   if (!client) {
     throw new Error(
-      "MongoDB is not configured. Set MONGODB_URI or geospatialskills_storage_URL in Vercel env.",
+      "MongoDB is not configured. Set geospatialskills_storage_MONGODB_URI (or MONGODB_URI) in Vercel env.",
     );
   }
   return client;

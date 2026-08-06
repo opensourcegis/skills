@@ -132,7 +132,7 @@ export async function loadDatabase(): Promise<GeoSkillsDb> {
   } catch (error) {
     console.error("MongoDB load failed:", error);
     throw new Error(
-      "Could not connect to MongoDB. Check MONGODB_URI / geospatialskills_storage_URL and Atlas network access.",
+      "Could not connect to MongoDB. Check geospatialskills_storage_MONGODB_URI and Atlas network access.",
     );
   }
 }
@@ -143,7 +143,7 @@ export async function saveDatabase(db: GeoSkillsDb): Promise<GeoSkillsDb> {
 
   if (!client || !getMongoUri()) {
     throw new Error(
-      "MongoDB is not configured. Set MONGODB_URI or geospatialskills_storage_URL in Vercel, then redeploy.",
+      "MongoDB is not configured. Set geospatialskills_storage_MONGODB_URI in Vercel, then redeploy.",
     );
   }
 
@@ -152,7 +152,7 @@ export async function saveDatabase(db: GeoSkillsDb): Promise<GeoSkillsDb> {
   } catch (error) {
     console.error("MongoDB save failed:", error);
     throw new Error(
-      "Could not save to MongoDB. Check MONGODB_URI / geospatialskills_storage_URL and try again.",
+      "Could not save to MongoDB. Check geospatialskills_storage_MONGODB_URI and try again.",
     );
   }
 
