@@ -1,16 +1,26 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { isClerkConfigured } from "@/lib/clerk-config";
+import type { NextRequest } from "next/server";
+import { auth, isGoogleAuthConfigured } from "@/auth";
 
-const middleware = isClerkConfigured()
-  ? clerkMiddleware()
-  : () => NextResponse.next();
+export default async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const needsAuth =
+    path.startsWith("/contribute") || Boolean(path.match(/\/skillsets\/.+\/edit$/));
 
-export default middleware;
+  if (!needsAuth || !isGoogleAuthConfigured()) {
+    return NextResponse.next();
+  }
+
+  const session = await auth();
+  if (!session) {
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("callbackUrl", path);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
-  ],
+  matcher: ["/contribute/:path*", "/skillsets/:path*/edit"],
 };

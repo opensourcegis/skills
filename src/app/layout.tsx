@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Figtree, Fraunces } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
-import { isClerkConfigured } from "@/lib/clerk-config";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -27,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  const body = (
+  return (
     <html
       lang="en"
       className={`${figtree.variable} ${fraunces.variable} h-full antialiased`}
@@ -44,10 +42,4 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </body>
     </html>
   );
-
-  if (!isClerkConfigured()) {
-    return body;
-  }
-
-  return <ClerkProvider>{body}</ClerkProvider>;
 }

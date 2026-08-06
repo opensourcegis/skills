@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
+import { isGoogleAuthConfigured } from "@/auth";
 import { SkillsetForm } from "@/components/skillset-form";
 import { SetupBanner } from "@/components/setup-banner";
 import { getContributorAccess } from "@/lib/auth";
-import { isClerkConfigured } from "@/lib/clerk-config";
 import {
   databaseReady,
   listCompetencies,
@@ -16,9 +15,9 @@ export const metadata = {
 
 export default async function ContributePage() {
   const ready = await databaseReady();
-  const clerkReady = isClerkConfigured();
+  const googleReady = isGoogleAuthConfigured();
 
-  if (!ready || !clerkReady) {
+  if (!ready || !googleReady) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="display text-4xl text-ink">Contribute</h1>
@@ -36,16 +35,15 @@ export default async function ContributePage() {
       <div className="mx-auto max-w-xl px-6 py-16 text-center">
         <h1 className="display text-4xl text-ink">Faculty sign in</h1>
         <p className="mt-4 text-ink-soft">
-          Allowed faculty emails can add skillsets, competencies, objectives,
-          outcomes, and exercises.
+          Sign in with Google using an allowlisted faculty email to add
+          skillsets, competencies, objectives, outcomes, and exercises.
         </p>
-        <div className="mt-8">
-          <SignInButton mode="modal">
-            <button className="rounded-md bg-teal px-5 py-3 font-medium text-white hover:bg-teal-deep">
-              Sign in to contribute
-            </button>
-          </SignInButton>
-        </div>
+        <Link
+          href="/sign-in?callbackUrl=/contribute"
+          className="mt-8 inline-flex rounded-md bg-teal px-5 py-3 font-medium text-white hover:bg-teal-deep"
+        >
+          Continue with Google
+        </Link>
       </div>
     );
   }

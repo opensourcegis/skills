@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function EditSkillsetPage({ params }: PageProps) {
   const { slug } = await params;
   const access = await getContributorAccess();
-  if (!access.signedIn) redirect("/sign-in");
+  if (!access.signedIn) redirect("/sign-in?callbackUrl=/skillsets/" + slug + "/edit");
   if (!access.allowed) redirect("/contribute");
   if (!(await databaseReady())) notFound();
 

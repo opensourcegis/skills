@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { auth, isGoogleAuthConfigured, signOut } from "@/auth";
 import { getContributorAccess } from "@/lib/auth";
-import { isClerkConfigured } from "@/lib/clerk-config";
 
 export async function SiteHeader() {
-  const clerkReady = isClerkConfigured();
-  const access = clerkReady
+  const googleReady = isGoogleAuthConfigured();
+  const access = googleReady
     ? await getContributorAccess()
     : { signedIn: false, allowed: false, email: null };
+  const session = googleReady ? await auth() : null;
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-[rgba(247,250,248,0.86)] backdrop-blur-md">
@@ -45,26 +45,29 @@ export async function SiteHeader() {
             >
               Contribute
             </Link>
-          ) : clerkReady ? (
-            <Show when="signed-out">
-              <SignInButton mode="modal">
-                <button className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep">
-                  Faculty sign in
-                </button>
-              </SignInButton>
-            </Show>
           ) : (
             <Link
-              href="/contribute"
+              href={googleReady ? "/sign-in" : "/contribute"}
               className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
             >
-              Contribute
+              {googleReady ? "Faculty sign in" : "Contribute"}
             </Link>
           )}
-          {clerkReady ? (
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
+          {session?.user ? (
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
+            >
+              <button
+                type="submit"
+                className="rounded-md px-3 py-2 text-ink-soft transition hover:bg-paper hover:text-ink"
+                title={session.user.email ?? undefined}
+              >
+                Sign out
+              </button>
+            </form>
           ) : null}
         </nav>
       </div>
