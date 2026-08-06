@@ -112,16 +112,19 @@ export function CourseBuilderForm({
           <span className="font-medium">Summary</span>
           <textarea
             required
+            minLength={10}
             value={summary}
             onChange={(event) => setSummary(event.target.value)}
             rows={3}
             className="rounded-md border border-line bg-white px-3 py-2"
+            placeholder="Short description of the course (at least 10 characters)"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">Target audience</span>
           <input
             required
+            minLength={3}
             value={targetAudience}
             onChange={(event) => setTargetAudience(event.target.value)}
             className="rounded-md border border-line bg-white px-3 py-2"

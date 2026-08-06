@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 import { requireContributor } from "@/lib/auth";
 import {
   insertCourse,
@@ -21,12 +22,23 @@ export type ActionResult =
   | { ok: false; error: string };
 
 function mapError(error: unknown): string {
+  if (error instanceof ZodError) {
+    const messages = error.issues.map((issue) => {
+      const field = issue.path.join(".") || "form";
+      return `${field}: ${issue.message}`;
+    });
+    return messages.slice(0, 3).join(" · ");
+  }
   if (error instanceof Error) {
     if (error.message === "UNAUTHORIZED") {
       return "Please sign in with Google to contribute.";
     }
     if (error.message === "AUTH_NOT_CONFIGURED") {
       return "Google sign-in is not configured yet (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET).";
+    }
+    // Surface unexpected errors instead of a blank generic message.
+    if (error.message && !error.message.includes("NEXT_REDIRECT")) {
+      return error.message;
     }
   }
   return "Unable to save. Check the form and try again.";

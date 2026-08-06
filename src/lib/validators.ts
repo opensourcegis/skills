@@ -25,13 +25,21 @@ const sessionSchema = z.object({
 });
 
 export const skillsetFormSchema = z.object({
-  title: z.string().trim().min(3).max(200),
-  summary: z.string().trim().min(20).max(500),
-  description: z.string().trim().min(40).max(5000),
-  topicId: z.string().min(1),
+  title: z.string().trim().min(3, "Title must be at least 3 characters").max(200),
+  summary: z
+    .string()
+    .trim()
+    .min(10, "Summary must be at least 10 characters")
+    .max(500),
+  description: z
+    .string()
+    .trim()
+    .min(20, "Description must be at least 20 characters")
+    .max(5000),
+  topicId: z.string().min(1, "Choose a topic"),
   level: z.enum(LEVELS),
   estimatedHours: z.coerce.number().int().min(1).max(200).optional().nullable(),
-  competencyIds: z.array(z.string().min(1)).min(1),
+  competencyIds: z.array(z.string().min(1)).min(1, "Select at least one competency"),
   newCompetencies: z
     .array(
       z.object({
@@ -42,7 +50,10 @@ export const skillsetFormSchema = z.object({
     )
     .max(8)
     .default([]),
-  objectives: z.array(z.string().trim().min(10).max(500)).min(1).max(12),
+  objectives: z
+    .array(z.string().trim().min(10).max(500))
+    .min(1, "Add at least one objective")
+    .max(12),
   outcomes: z
     .array(
       z.object({
@@ -50,20 +61,37 @@ export const skillsetFormSchema = z.object({
         bloomLevel: z.enum(BLOOM_LEVELS).optional().nullable(),
       }),
     )
-    .min(1)
+    .min(1, "Add at least one outcome")
     .max(12),
-  sessions: z.array(sessionSchema).min(1).max(24),
-  assessmentStrategyIds: z.array(z.enum(assessmentIds)).min(1).max(10),
+  sessions: z
+    .array(sessionSchema)
+    .min(1, "Add at least one session")
+    .max(24),
+  assessmentStrategyIds: z
+    .array(z.enum(assessmentIds))
+    .min(1, "Tick at least one assessment method")
+    .max(10),
 });
 
 export type SkillsetFormValues = z.infer<typeof skillsetFormSchema>;
 
 export const courseFormSchema = z.object({
-  title: z.string().trim().min(3).max(200),
-  code: z.string().trim().min(2).max(40),
-  summary: z.string().trim().min(20).max(800),
-  targetAudience: z.string().trim().min(10).max(400),
-  skillsetIds: z.array(z.string().min(1)).min(2).max(12),
+  title: z.string().trim().min(3, "Title must be at least 3 characters").max(200),
+  code: z.string().trim().min(2, "Course code must be at least 2 characters").max(40),
+  summary: z
+    .string()
+    .trim()
+    .min(10, "Summary must be at least 10 characters")
+    .max(800),
+  targetAudience: z
+    .string()
+    .trim()
+    .min(3, "Target audience must be at least 3 characters")
+    .max(400),
+  skillsetIds: z
+    .array(z.string().min(1))
+    .min(2, "Select at least two skillsets")
+    .max(12),
 });
 
 export type CourseFormValues = z.infer<typeof courseFormSchema>;
