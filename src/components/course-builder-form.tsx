@@ -74,7 +74,7 @@ export function CourseBuilderForm({
       setError(result.error);
       return;
     }
-    // Full navigation so the overlay cookie from the server action is included.
+    // Full navigation so the newly saved course is loaded from MongoDB.
     window.location.assign(`/courses/${result.slug}`);
   }
 
