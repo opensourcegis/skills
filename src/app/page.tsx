@@ -88,7 +88,7 @@ export default async function HomePage() {
 
         {featured.length === 0 ? (
           <p className="rounded-lg border border-dashed border-line bg-white/60 px-5 py-10 text-ink-soft">
-            No skillsets yet. After Neon and Clerk are connected, run the seed
+            No skillsets yet. After Neon and Google auth are connected, run the seed
             script or contribute the first entry.
           </p>
         ) : (

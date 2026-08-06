@@ -1,6 +1,5 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { isClerkConfigured } from "./clerk-config";
-import { isEmailAllowed } from "./utils";
+import { auth, isGoogleAuthConfigured } from "@/auth";
+import { isEmailAllowed } from "@/lib/utils";
 
 export type Contributor = {
   userId: string;
@@ -9,47 +8,36 @@ export type Contributor = {
 };
 
 export async function requireContributor(): Promise<Contributor> {
-  if (!isClerkConfigured()) {
+  if (!isGoogleAuthConfigured()) {
     throw new Error("UNAUTHORIZED");
   }
 
-  const { userId } = await auth();
-  if (!userId) {
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!session?.user || !email) {
     throw new Error("UNAUTHORIZED");
   }
-
-  const user = await currentUser();
-  const email =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses?.[0]?.emailAddress;
-
-  if (!email || !isEmailAllowed(email)) {
+  if (!isEmailAllowed(email)) {
     throw new Error("FORBIDDEN");
   }
 
-  const name =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    user?.username ||
-    null;
-
-  return { userId, email, name };
+  return {
+    userId: session.user.id ?? email,
+    email,
+    name: session.user.name ?? null,
+  };
 }
 
 export async function getContributorAccess() {
-  if (!isClerkConfigured()) {
+  if (!isGoogleAuthConfigured()) {
     return { signedIn: false, allowed: false, email: null as string | null };
   }
 
-  const { userId } = await auth();
-  if (!userId) {
-    return { signedIn: false, allowed: false, email: null as string | null };
+  const session = await auth();
+  const email = session?.user?.email ?? null;
+  if (!session?.user || !email) {
+    return { signedIn: false, allowed: false, email: null };
   }
-
-  const user = await currentUser();
-  const email =
-    user?.primaryEmailAddress?.emailAddress ??
-    user?.emailAddresses?.[0]?.emailAddress ??
-    null;
 
   return {
     signedIn: true,
