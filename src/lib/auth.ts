@@ -1,4 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { isClerkConfigured } from "./clerk-config";
 import { isEmailAllowed } from "./utils";
 
 export type Contributor = {
@@ -8,6 +9,10 @@ export type Contributor = {
 };
 
 export async function requireContributor(): Promise<Contributor> {
+  if (!isClerkConfigured()) {
+    throw new Error("UNAUTHORIZED");
+  }
+
   const { userId } = await auth();
   if (!userId) {
     throw new Error("UNAUTHORIZED");
@@ -31,6 +36,10 @@ export async function requireContributor(): Promise<Contributor> {
 }
 
 export async function getContributorAccess() {
+  if (!isClerkConfigured()) {
+    return { signedIn: false, allowed: false, email: null as string | null };
+  }
+
   const { userId } = await auth();
   if (!userId) {
     return { signedIn: false, allowed: false, email: null as string | null };

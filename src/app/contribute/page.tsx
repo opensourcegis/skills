@@ -1,8 +1,9 @@
-import { SignInButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { SignInButton } from "@clerk/nextjs";
 import { SkillsetForm } from "@/components/skillset-form";
 import { SetupBanner } from "@/components/setup-banner";
 import { getContributorAccess } from "@/lib/auth";
+import { isClerkConfigured } from "@/lib/clerk-config";
 import {
   databaseReady,
   listCompetencies,
@@ -15,9 +16,9 @@ export const metadata = {
 
 export default async function ContributePage() {
   const ready = await databaseReady();
-  const access = await getContributorAccess();
+  const clerkReady = isClerkConfigured();
 
-  if (!ready) {
+  if (!ready || !clerkReady) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="display text-4xl text-ink">Contribute</h1>
@@ -27,6 +28,8 @@ export default async function ContributePage() {
       </div>
     );
   }
+
+  const access = await getContributorAccess();
 
   if (!access.signedIn) {
     return (

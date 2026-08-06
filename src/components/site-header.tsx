@@ -1,9 +1,13 @@
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { getContributorAccess } from "@/lib/auth";
+import { isClerkConfigured } from "@/lib/clerk-config";
 
 export async function SiteHeader() {
-  const access = await getContributorAccess();
+  const clerkReady = isClerkConfigured();
+  const access = clerkReady
+    ? await getContributorAccess()
+    : { signedIn: false, allowed: false, email: null };
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-[rgba(247,250,248,0.86)] backdrop-blur-md">
@@ -41,7 +45,7 @@ export async function SiteHeader() {
             >
               Contribute
             </Link>
-          ) : (
+          ) : clerkReady ? (
             <Show when="signed-out">
               <SignInButton mode="modal">
                 <button className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep">
@@ -49,10 +53,19 @@ export async function SiteHeader() {
                 </button>
               </SignInButton>
             </Show>
+          ) : (
+            <Link
+              href="/contribute"
+              className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
+            >
+              Contribute
+            </Link>
           )}
-          <Show when="signed-in">
-            <UserButton />
-          </Show>
+          {clerkReady ? (
+            <Show when="signed-in">
+              <UserButton />
+            </Show>
+          ) : null}
         </nav>
       </div>
     </header>

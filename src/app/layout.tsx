@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Figtree, Fraunces } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { isClerkConfigured } from "@/lib/clerk-config";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -26,23 +27,27 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${figtree.variable} ${fraunces.variable} h-full antialiased`}
-      >
-        <body className="page-shell min-h-full flex flex-col text-ink">
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-line px-6 py-8 text-sm text-ink-soft">
-            <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="display text-base text-ink">GeoSkills Atlas</p>
-              <p>Course planning reference for geospatial faculty.</p>
-            </div>
-          </footer>
-        </body>
-      </html>
-    </ClerkProvider>
+  const body = (
+    <html
+      lang="en"
+      className={`${figtree.variable} ${fraunces.variable} h-full antialiased`}
+    >
+      <body className="page-shell min-h-full flex flex-col text-ink">
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <footer className="border-t border-line px-6 py-8 text-sm text-ink-soft">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="display text-base text-ink">GeoSkills Atlas</p>
+            <p>Course planning reference for geospatial faculty.</p>
+          </div>
+        </footer>
+      </body>
+    </html>
   );
+
+  if (!isClerkConfigured()) {
+    return body;
+  }
+
+  return <ClerkProvider>{body}</ClerkProvider>;
 }
