@@ -12,7 +12,6 @@ export const metadata = {
 export default async function NewCoursePage() {
   const access = await getContributorAccess();
   if (!access.signedIn) redirect("/sign-in?callbackUrl=/courses/new");
-  if (!access.allowed) redirect("/courses");
 
   const skillsets = await listSkillsets({});
 

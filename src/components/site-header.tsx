@@ -61,7 +61,7 @@ export async function SiteHeader() {
               href="/sign-in"
               className="rounded-md bg-teal px-3 py-2 font-medium text-white transition hover:bg-teal-deep"
             >
-              Faculty sign in
+              Sign in with Google
             </Link>
           )}
           {session?.user ? (

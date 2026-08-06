@@ -23,9 +23,6 @@ function mapError(error: unknown): string {
     if (error.message === "UNAUTHORIZED") {
       return "Please sign in with Google to contribute.";
     }
-    if (error.message === "FORBIDDEN") {
-      return "Your Google account is not on the faculty allowlist.";
-    }
     if (error.message === "AUTH_NOT_CONFIGURED") {
       return "Google sign-in is not configured yet (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET / AUTH_SECRET).";
     }

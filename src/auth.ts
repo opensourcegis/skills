@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { isEmailAllowed } from "@/lib/utils";
 
 export function isGoogleAuthConfigured() {
   return Boolean(
@@ -27,11 +26,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/sign-in",
     error: "/sign-in",
-  },
-  callbacks: {
-    async signIn({ user }) {
-      return isEmailAllowed(user.email);
-    },
   },
   trustHost: true,
   secret: process.env.AUTH_SECRET,

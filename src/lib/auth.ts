@@ -1,5 +1,4 @@
 import { auth, isGoogleAuthConfigured } from "@/auth";
-import { isEmailAllowed } from "@/lib/utils";
 
 export type Contributor = {
   userId: string;
@@ -16,9 +15,6 @@ export async function requireContributor(): Promise<Contributor> {
   const email = session?.user?.email;
   if (!session?.user || !email) {
     throw new Error("UNAUTHORIZED");
-  }
-  if (!isEmailAllowed(email)) {
-    throw new Error("FORBIDDEN");
   }
 
   return {
@@ -44,9 +40,10 @@ export async function getContributorAccess() {
     return { signedIn: false, allowed: false, configured: true, email: null };
   }
 
+  // Any signed-in Google user may contribute.
   return {
     signedIn: true,
-    allowed: isEmailAllowed(email),
+    allowed: true,
     configured: true,
     email,
   };

@@ -6,13 +6,12 @@ type PageProps = {
 };
 
 export const metadata = {
-  title: "Faculty sign in",
+  title: "Sign in",
 };
 
 export default async function SignInPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const callbackUrl = params.callbackUrl || "/contribute";
-  const denied = params.error === "AccessDenied";
   const configMissing =
     params.error === "Config" || !isGoogleAuthConfigured();
 
@@ -33,10 +32,6 @@ export default async function SignInPage({ searchParams }: PageProps) {
           <li>
             <code>AUTH_GOOGLE_SECRET</code>
           </li>
-          <li>
-            Optional <code>ALLOWED_EMAILS</code> (comma-separated). Empty =
-            any Google user may contribute.
-          </li>
         </ul>
         <p className="mt-4 text-sm text-ink-soft">
           Redirect URI:{" "}
@@ -48,16 +43,10 @@ export default async function SignInPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-12">
-      <h1 className="display text-4xl text-ink">Faculty sign in</h1>
+      <h1 className="display text-4xl text-ink">Sign in with Google</h1>
       <p className="mt-3 text-ink-soft">
-        Use Google to contribute skillsets and build courses.
+        Use any Google account to contribute skillsets and build courses.
       </p>
-      {denied ? (
-        <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          That Google account is not allowed. Ask an admin to add it to{" "}
-          <code>ALLOWED_EMAILS</code>.
-        </p>
-      ) : null}
       <form
         className="mt-8"
         action={async () => {

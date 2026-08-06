@@ -25,7 +25,6 @@ export default async function EditSkillsetPage({ params }: PageProps) {
   if (!access.signedIn) {
     redirect(`/sign-in?callbackUrl=/skillsets/${slug}/edit`);
   }
-  if (!access.allowed) redirect("/contribute");
 
   const [skillset, topics, competencies] = await Promise.all([
     getSkillsetBySlug(slug),

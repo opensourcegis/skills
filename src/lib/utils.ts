@@ -8,22 +8,6 @@ export function slugify(value: string): string {
     .slice(0, 200);
 }
 
-export function parseAllowedEmails(raw = process.env.ALLOWED_EMAILS): string[] {
-  if (!raw) return [];
-  return raw
-    .split(/[\n,;]+/)
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-/** If ALLOWED_EMAILS is empty, any signed-in Google user may contribute. */
-export function isEmailAllowed(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allowlist = parseAllowedEmails();
-  if (allowlist.length === 0) return true;
-  return allowlist.includes(email.trim().toLowerCase());
-}
-
 export const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 export type Level = (typeof LEVELS)[number];
 
