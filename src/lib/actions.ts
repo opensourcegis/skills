@@ -57,6 +57,7 @@ export async function createSkillset(
     revalidatePath(`/skillsets/${created.slug}`);
     return { ok: true, slug: created.slug };
   } catch (error) {
+    if (isNextRedirect(error)) throw error;
     return { ok: false, error: mapError(error) };
   }
 }
@@ -76,6 +77,7 @@ export async function updateSkillset(
     revalidatePath(`/skillsets/${updated.slug}`);
     return { ok: true, slug: updated.slug };
   } catch (error) {
+    if (isNextRedirect(error)) throw error;
     return { ok: false, error: mapError(error) };
   }
 }
@@ -91,6 +93,7 @@ export async function createCourse(
     revalidatePath(`/courses/${created.slug}`);
     return { ok: true, slug: created.slug };
   } catch (error) {
+    if (isNextRedirect(error)) throw error;
     return { ok: false, error: mapError(error) };
   }
 }
@@ -108,6 +111,7 @@ export async function updateCourse(
     revalidatePath(`/courses/${updated.slug}`);
     return { ok: true, slug: updated.slug };
   } catch (error) {
+    if (isNextRedirect(error)) throw error;
     return { ok: false, error: mapError(error) };
   }
 }
@@ -121,6 +125,16 @@ export async function deleteCourse(id: string): Promise<ActionResult> {
     revalidatePath(`/courses/${removed.slug}`);
     return { ok: true, slug: removed.slug };
   } catch (error) {
+    if (isNextRedirect(error)) throw error;
     return { ok: false, error: mapError(error) };
   }
+}
+
+function isNextRedirect(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")
+  );
 }

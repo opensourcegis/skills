@@ -1,11 +1,19 @@
 /**
- * Vercel Edge Config connection — hardcoded per project request.
- * ID: ecfg_yyeqcds7wvbnksllklj4jn2xocjp
+ * Optional Edge Config — only used when env vars are present and valid.
+ * Broken/hardcoded tokens caused silent save failures and post-submit 404s.
  */
-export const EDGE_CONFIG_ID = "ecfg_yyeqcds7wvbnksllklj4jn2xocjp";
+export const EDGE_CONFIG_ID =
+  process.env.EDGE_CONFIG_ID ?? "ecfg_yyeqcds7wvbnksllklj4jn2xocjp";
 export const EDGE_CONFIG_TOKEN =
-  "5bf6b008a9ec05f6870c476d10b53211797aa000f95aae344ae60f9b422286da";
-export const EDGE_CONFIG_URL = `https://edge-config.vercel.com/${EDGE_CONFIG_ID}?token=${EDGE_CONFIG_TOKEN}`;
+  process.env.EDGE_CONFIG_TOKEN ?? process.env.EDGE_CONFIG?.match(/token=([^&]+)/)?.[1] ?? "";
+export const EDGE_CONFIG_URL =
+  process.env.EDGE_CONFIG ??
+  (EDGE_CONFIG_TOKEN
+    ? `https://edge-config.vercel.com/${EDGE_CONFIG_ID}?token=${EDGE_CONFIG_TOKEN}`
+    : "");
+/** Vercel API token with Edge Config write access (not the read connection token). */
+export const EDGE_CONFIG_WRITE_TOKEN =
+  process.env.EDGE_CONFIG_WRITE_TOKEN ?? process.env.VERCEL_API_TOKEN ?? "";
 export const EDGE_CONFIG_DB_KEY = "geoskills_db";
 
 /** Canonical production URL (apex redirects to www) */

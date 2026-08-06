@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { startTransition, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createCourse, updateCourse } from "@/lib/actions";
 
 type SkillsetOption = {
@@ -30,7 +29,6 @@ export function CourseBuilderForm({
   mode = "create",
   initial,
 }: CourseBuilderFormProps) {
-  const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [code, setCode] = useState(initial?.code ?? "");
   const [summary, setSummary] = useState(initial?.summary ?? "");
@@ -76,10 +74,8 @@ export function CourseBuilderForm({
       setError(result.error);
       return;
     }
-    startTransition(() => {
-      router.push(`/courses/${result.slug}`);
-      router.refresh();
-    });
+    // Full navigation so the overlay cookie from the server action is included.
+    window.location.assign(`/courses/${result.slug}`);
   }
 
   return (

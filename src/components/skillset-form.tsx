@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import { createSkillset, updateSkillset } from "@/lib/actions";
 import {
   ASSESSMENT_STRATEGIES,
@@ -50,7 +49,6 @@ export function SkillsetForm({
   initial,
   mode = "create",
 }: SkillsetFormProps) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -139,10 +137,7 @@ export function SkillsetForm({
       return;
     }
 
-    startTransition(() => {
-      router.push(`/skillsets/${result.slug}`);
-      router.refresh();
-    });
+    window.location.assign(`/skillsets/${result.slug}`);
   }
 
   return (
